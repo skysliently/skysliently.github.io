@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="跟着dalao学习一下19年与20年两个dubbo反序列化的问题。其实说近也不近了一个19年一个20年，但也是学习一下。 CVE-2019-17564复现先用docker开个zookeeper 目前大部分师傅都选择了apache&#x2F;dubbo-samples来复现，这里我们也选择这演示项目，修改项目中的依赖为受影响的版本  依赖中dubbo提示无版本手动加一下  添加一个gadgets  因为是虚拟">
+<meta property="og:type" content="article">
+<meta property="og:title" content="dubbo近期漏洞学习">
+<meta property="og:url" content="http://yoursite.com/2021/02/23/dubbo%E8%BF%91%E6%9C%9F%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="自动笔记生成器">
+<meta property="og:description" content="跟着dalao学习一下19年与20年两个dubbo反序列化的问题。其实说近也不近了一个19年一个20年，但也是学习一下。 CVE-2019-17564复现先用docker开个zookeeper 目前大部分师傅都选择了apache&#x2F;dubbo-samples来复现，这里我们也选择这演示项目，修改项目中的依赖为受影响的版本  依赖中dubbo提示无版本手动加一下  添加一个gadgets  因为是虚拟">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B1%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B2%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B3%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B4%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B5%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B6%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B7%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B8%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B9%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B10%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B11%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B12%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B13%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B14%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B15%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B16%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B17%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B18%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B19%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B20%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B21%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B22%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B23%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B24%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B25%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B26%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B27%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B28%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B29%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B30%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B31%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B32%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B33%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B34%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B35%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B36%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B37%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B38%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B39%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B40%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B41%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B42%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B43%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B44%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B45%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B46%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B47%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B48%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B49%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B50%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B51%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B52%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B53%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B54%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B55%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B56%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B57%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B58%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B59%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B60%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B61%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B62%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B63%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210222/dubbo/Image%20%5B64%5D.png">
+<meta property="article:published_time" content="2021-02-23T08:20:17.000Z">
+<meta property="article:modified_time" content="2021-03-24T02:41:21.875Z">
+<meta property="article:author" content="0xSky">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/images/210222/dubbo/Image.png">
+
+<link rel="canonical" href="http://yoursite.com/2021/02/23/dubbo%E8%BF%91%E6%9C%9F%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>dubbo近期漏洞学习 | 自动笔记生成器</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">自动笔记生成器</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/02/23/dubbo%E8%BF%91%E6%9C%9F%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0xSky">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="自动笔记生成器">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          dubbo近期漏洞学习
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-02-23 16:20:17" itemprop="dateCreated datePublished" datetime="2021-02-23T16:20:17+08:00">2021-02-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-03-24 10:41:21" itemprop="dateModified" datetime="2021-03-24T10:41:21+08:00">2021-03-24</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>跟着dalao学习一下19年与20年两个dubbo反序列化的问题。其实说近也不近了一个19年一个20年，但也是学习一下。</p>
+<h2 id="CVE-2019-17564"><a href="#CVE-2019-17564" class="headerlink" title="CVE-2019-17564"></a><strong>CVE-2019-17564</strong></h2><h3 id="复现"><a href="#复现" class="headerlink" title="复现"></a><strong>复现</strong></h3><p>先用docker开个zookeeper<br><img src="/images/210222/dubbo/Image.png" alt=""></p>
+<p>目前大部分师傅都选择了apache/dubbo-samples来复现，这里我们也选择这演示项目，修改项目中的依赖为受影响的版本</p>
+<p><img src="/images/210222/dubbo/Image%20%5B1%5D.png" alt=""></p>
+<p>依赖中dubbo提示无版本手动加一下</p>
+<p><img src="/images/210222/dubbo/Image%20%5B2%5D.png" alt=""></p>
+<p>添加一个gadgets</p>
+<p><img src="/images/210222/dubbo/Image%20%5B3%5D.png" alt=""></p>
+<p>因为是虚拟机docker启动的zookeeper所以指定一下zookeeper的地址 </p>
+<p><img src="/images/210222/dubbo/Image%20%5B4%5D.png" alt=""></p>
+<p>启动服务</p>
+<p><img src="/images/210222/dubbo/Image%20%5B5%5D.png" alt=""></p>
+<p>生成个PoC</p>
+<p><img src="/images/210222/dubbo/Image%20%5B6%5D.png" alt=""></p>
+<p>直接在burp中粘贴会有编码问题，所以选择从文件中粘贴</p>
+<p><img src="/images/210222/dubbo/Image%20%5B7%5D.png" alt=""></p>
+<p>发送，无事发生，尴尬…看看ide</p>
+<p><img src="/images/210222/dubbo/Image%20%5B8%5D.png" alt=""></p>
+<p>包导入有问题，刷新一下maven，再启动，执行PoC，弹出计算器</p>
+<p><img src="/images/210222/dubbo/Image%20%5B9%5D.png" alt=""></p>
+<p>大胆地再把版本改小点，报错，去阿里云maven上看看</p>
+<p><img src="/images/210222/dubbo/Image%20%5B10%5D.png" alt=""></p>
+<p>阿里云maven中只包含2.7以上的dubbo（org.apache.dubbo）</p>
+<p><img src="/images/210222/dubbo/Image%20%5B11%5D.png" alt=""></p>
+<p>猜测是因为2.7版本后 group-id 才改成apache，可能这个时候才捐赠吧</p>
+<p><img src="/images/210222/dubbo/Image%20%5B12%5D.png" alt=""></p>
+<h3 id="总结下利用条件"><a href="#总结下利用条件" class="headerlink" title="总结下利用条件"></a><strong>总结下利用条件</strong></h3><p>​    受影响的版本（废话）；<br>​    使用了能够利用的gadgets，一般来说就是几个Commons-collections；<br>​    使用了HTTP作为通信协议；</p>
+<h3 id="简单分析"><a href="#简单分析" class="headerlink" title="简单分析"></a><strong>简单分析</strong></h3><p>简单地跟进一下。首先，因为我们发送的不是正常的业务流程，所以会抛出异常，当然抛出异常时反序列化已经完成了，我们查看一下抛出的堆栈</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2</span>月 <span class="number">22</span>, <span class="number">2021</span> <span class="number">11</span>:<span class="number">49</span>:<span class="number">16</span> 上午 org.apache.catalina.core.StandardWrapperValve invoke</span><br><span class="line">严重: Servlet.service() <span class="keyword">for</span> servlet [dispatcher] in context with path [/] threw exception [org.apache.commons.collections4.FunctorException: InstantiateTransformer: Constructor threw an exception] with root cause</span><br><span class="line">java.lang.NullPointerException</span><br><span class="line">    at java.xml/com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet.postInitialization(AbstractTranslet.java:<span class="number">372</span>)</span><br><span class="line">    at java.xml/com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl.getTransletInstance(TemplatesImpl.java:<span class="number">557</span>)</span><br><span class="line">    at java.xml/com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl.newTransformer(TemplatesImpl.java:<span class="number">584</span>)</span><br><span class="line">    at java.xml/com.sun.org.apache.xalan.internal.xsltc.trax.TrAXFilter.&lt;init&gt;(TrAXFilter.java:<span class="number">57</span>)</span><br><span class="line">    at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)</span><br><span class="line">    at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:<span class="number">62</span>)</span><br><span class="line">    at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:<span class="number">45</span>)</span><br><span class="line">    at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:<span class="number">500</span>)</span><br><span class="line">    at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:<span class="number">481</span>)</span><br><span class="line">    at org.apache.commons.collections4.functors.InstantiateTransformer.transform(InstantiateTransformer.java:<span class="number">116</span>)</span><br><span class="line">    at org.apache.commons.collections4.functors.InstantiateTransformer.transform(InstantiateTransformer.java:<span class="number">32</span>)</span><br><span class="line">    at org.apache.commons.collections4.functors.ChainedTransformer.transform(ChainedTransformer.java:<span class="number">112</span>)</span><br><span class="line">    at org.apache.commons.collections4.comparators.TransformingComparator.compare(TransformingComparator.java:<span class="number">81</span>)</span><br><span class="line">    at java.base/java.util.PriorityQueue.siftDownUsingComparator(PriorityQueue.java:<span class="number">711</span>)</span><br><span class="line">    at java.base/java.util.PriorityQueue.heapify(PriorityQueue.java:<span class="number">733</span>)</span><br><span class="line">    at java.base/java.util.PriorityQueue.readObject(PriorityQueue.java:<span class="number">798</span>)</span><br><span class="line">    at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)</span><br><span class="line">    at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:<span class="number">62</span>)</span><br><span class="line">    at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:<span class="number">43</span>)</span><br><span class="line">    at java.base/java.lang.reflect.Method.invoke(Method.java:<span class="number">567</span>)</span><br><span class="line">    at java.base/java.io.ObjectStreamClass.invokeReadObject(ObjectStreamClass.java:<span class="number">1160</span>)</span><br><span class="line">    at java.base/java.io.ObjectInputStream.readSerialData(ObjectInputStream.java:<span class="number">2216</span>)</span><br><span class="line">    at java.base/java.io.ObjectInputStream.readOrdinaryObject(ObjectInputStream.java:<span class="number">2087</span>)</span><br><span class="line">    at java.base/java.io.ObjectInputStream.readObject0(ObjectInputStream.java:<span class="number">1594</span>)</span><br><span class="line">    at java.base/java.io.ObjectInputStream.readObject(ObjectInputStream.java:<span class="number">430</span>)</span><br><span class="line">    at org.springframework.remoting.rmi.RemoteInvocationSerializingExporter.doReadRemoteInvocation(RemoteInvocationSerializingExporter.java:<span class="number">144</span>)</span><br><span class="line">    at org.springframework.remoting.httpinvoker.HttpInvokerServiceExporter.readRemoteInvocation(HttpInvokerServiceExporter.java:<span class="number">121</span>)</span><br><span class="line">    at org.springframework.remoting.httpinvoker.HttpInvokerServiceExporter.readRemoteInvocation(HttpInvokerServiceExporter.java:<span class="number">100</span>)</span><br><span class="line">    at org.springframework.remoting.httpinvoker.HttpInvokerServiceExporter.handleRequest(HttpInvokerServiceExporter.java:<span class="number">79</span>)</span><br><span class="line">    at org.apache.dubbo.rpc.protocol.http.HttpProtocol$InternalHandler.handle(HttpProtocol.java:<span class="number">216</span>)</span><br><span class="line">    at org.apache.dubbo.remoting.http.servlet.DispatcherServlet.service(DispatcherServlet.java:<span class="number">61</span>)</span><br><span class="line">    at javax.servlet.http.HttpServlet.service(HttpServlet.java:<span class="number">790</span>)</span><br><span class="line">    at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:<span class="number">231</span>)</span><br><span class="line">    at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:<span class="number">166</span>)</span><br><span class="line">    at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:<span class="number">198</span>)</span><br><span class="line">    at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:<span class="number">96</span>)</span><br><span class="line">    at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:<span class="number">496</span>)</span><br><span class="line">    at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:<span class="number">140</span>)</span><br><span class="line">    at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:<span class="number">81</span>)</span><br><span class="line">    at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:<span class="number">87</span>)</span><br><span class="line">    at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:<span class="number">342</span>)</span><br><span class="line">    at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:<span class="number">803</span>)</span><br><span class="line">    at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:<span class="number">66</span>)</span><br><span class="line">    at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:<span class="number">790</span>)</span><br><span class="line">    at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:<span class="number">1468</span>)</span><br><span class="line">    at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:<span class="number">49</span>)</span><br><span class="line">    at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:<span class="number">1128</span>)</span><br><span class="line">    at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:<span class="number">628</span>)</span><br><span class="line">    at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:<span class="number">61</span>)</span><br><span class="line">    at java.base/java.lang.Thread.run(Thread.java:<span class="number">830</span>)</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，从org.apache.dubbo.remoting.http.servlet.DispatcherServlet.service转入了org.apache.dubbo.remoting.http.servlet.DispatcherServlet.service处理，进入HttpProtocol.java:216处，打个点debug一下，更加清晰</p>
+<p><img src="/images/210222/dubbo/Image%20%5B13%5D.png" alt=""></p>
+<p>发送POST，跟进skeleton.handleRequest</p>
+<p><img src="/images/210222/dubbo/Image%20%5B14%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B15%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B16%5D.png" alt=""></p>
+<p>在此处我们看到了ObjectInputStream ois对象，反序列化的问题大概率应该就是出在这里了，跟进看一下</p>
+<p><img src="/images/210222/dubbo/Image%20%5B17%5D.png" alt=""></p>
+<p>doReadRemoteInvocation方法中调用了ois的readObject()方法，触发了gadgets构造的代码</p>
+<hr>
+<h2 id="CVE-2020-1948"><a href="#CVE-2020-1948" class="headerlink" title="CVE-2020-1948"></a><strong>CVE-2020-1948</strong></h2><h3 id="复现-1"><a href="#复现-1" class="headerlink" title="复现"></a><strong>复现</strong></h3><p>此处换了一个复现环境dubbo-spring-boot-project-0.1.0，上一个环境也可以使用但是这个环境有完整的2.5.10版本依赖，于是选择了这个项目。由于此处使用了修改的Hessian作为反序列化实现，所以之前的Gadgets与PoC生成方式不再可用了，根据marshalsec工具中的分析，有5个可利用的Gadgets：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Rome</span><br><span class="line">XBean</span><br><span class="line">Resin</span><br><span class="line">SpringPartiallyComparableAdvisorHolder</span><br><span class="line">SpringAbstractBeanFactoryPointcutAdvisor</span><br></pre></td></tr></table></figure>
+
+<p>引入Rome</p>
+<p><img src="/images/210222/dubbo/Image%20%5B18%5D.png" alt=""></p>
+<p>根据dalao的记录，拉个 <a href="https://github.com/welk1n/JNDI-Injection-Exploit" target="_blank" rel="noopener">JNDI-Injection-Exploit</a>，并将其打包，这个工具主要是生成JNDI链接并启动后端相关服务。</p>
+<p><img src="/images/210222/dubbo/Image%20%5B19%5D.png" alt=""></p>
+<p>启动一下dubbo的demo</p>
+<p><img src="/images/210222/dubbo/Image%20%5B20%5D.png" alt=""></p>
+<p>此处我选择的JRE环境是1.8_131</p>
+<p><img src="/images/210222/dubbo/Image%20%5B21%5D.png" alt=""></p>
+<p>找一个py POC丢进去跑一下</p>
+<p><img src="/images/210222/dubbo/Image%20%5B22%5D.png" alt=""></p>
+<p>报错了</p>
+<p><img src="/images/210222/dubbo/Image%20%5B23%5D.png" alt=""></p>
+<p>看下dubbo 演示项目的输出</p>
+<p><img src="/images/210222/dubbo/Image%20%5B24%5D.png" alt=""></p>
+<p>修改20880端口为12345，再跑一下，正常弹出计算器</p>
+<p><img src="/images/210222/dubbo/Image%20%5B25%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B26%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B27%5D.png" alt=""></p>
+<h3 id="尝试分析"><a href="#尝试分析" class="headerlink" title="尝试分析"></a><strong>尝试分析</strong></h3><p>这个位置的触发比上一个漏洞要复杂，尝试分析一下。根据师傅博客中的讲解了解到，原POC是使用任意不存在的service和method，导致Dubbo找不到注册的service而抛出异常，在抛出异常的时候触发漏洞；反序列化执行完成后，利用RemotingException抛出异常输出时隐式调用了Rome的toString方法导致RCE。还有其他的触发方式，暂时就先学习这个。<br>因为是错误抛出隐式调用，我们找到错误堆栈</p>
+<p><img src="/images/210222/dubbo/Image%20%5B28%5D.png" alt=""></p>
+<p>在DecodeHandler.received这个方法上下个断点</p>
+<p><img src="/images/210222/dubbo/Image%20%5B29%5D.png" alt=""></p>
+<p>这里遇到个问题，toString比调试先执行了，一直跳出计算器，看了师傅的博客关掉了 Enable ‘toString()’ object view选项，正常debug，接下来跟着错误堆栈走一遍整个流程</p>
+<p><img src="/images/210222/dubbo/Image%20%5B30%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B31%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B32%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B33%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B34%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B35%5D.png" alt=""></p>
+<p>此处data来自于req.getData()方法，此处如果我们点击mData的toString查看字符串就会弹出计算器，命令执行点就在此处的toString方法上，从堆栈上一样可以看出，所以在后续流程中有某处调用了toSting触发</p>
+<p><img src="/images/210222/dubbo/Image%20%5B36%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B37%5D.png" alt=""></p>
+<p>继续跟进</p>
+<p><img src="/images/210222/dubbo/Image%20%5B38%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B39%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B40%5D.png" alt=""></p>
+<p>到此处时程序throw了一个RemotingException，也就是之前师傅说到的未找到service而抛出异常，并执行反序列化完成的代码的点，当我们跟进这个构造方法时计算器弹出</p>
+<p><img src="/images/210222/dubbo/Image%20%5B41%5D.png" alt=""></p>
+<p>因为构造方法在传参时进行了参数拼接</p>
+<p><img src="/images/210222/dubbo/Image%20%5B42%5D.png" alt=""></p>
+<p>参数末尾的inv对象的toSting方法被隐式调用触发计算器弹出。我们可以验证一下，当我们点击IDE中inv的toString或inv中request的toString时计算器就会弹出</p>
+<p><img src="/images/210222/dubbo/Image%20%5B43%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B44%5D.png" alt=""></p>
+<p>查看inv对象的Class</p>
+<p><img src="/images/210222/dubbo/Image%20%5B45%5D.png" alt=""></p>
+<p>DecodeableRpcInvocation中无toString方法</p>
+<p><img src="/images/210222/dubbo/Image%20%5B46%5D.png" alt=""></p>
+<p>DecodeableRpcInvocation的父类RpcInvocation中重写了toString方法，并最终调用的是ToStringBean重写的toString</p>
+<p><img src="/images/210222/dubbo/Image%20%5B47%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B48%5D.png" alt=""></p>
+<p>跟进后在Arrays.toString(this.arguments)处；result = this.toString(prefix);触发计算器</p>
+<p><img src="/images/210222/dubbo/Image%20%5B49%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B50%5D.png" alt=""></p>
+<p>我们可以看到arguments是一个ToStringBean类型</p>
+<p><img src="/images/210222/dubbo/Image%20%5B51%5D.png" alt=""></p>
+<p>此处调用的this.toString(prefix)方法中，遍历所有的Method并invoke调用，在上图可以看到我们的DataSource是ldap服务，就从ldap服务加载代码执行</p>
+<p><img src="/images/210222/dubbo/Image%20%5B52%5D.png" alt=""></p>
+<p>通过单步可以得知触发时的Method是getDatabaseMetaData，跟进方法，最终调用远程ldap上的方法</p>
+<p><img src="/images/210222/dubbo/Image%20%5B53%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B54%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B55%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B56%5D.png" alt=""></p>
+<p>从现有的5个Gadgets来看利用起来不容易，可能有其他更妙的姿势。</p>
+<p>梳理一下这个PoC的流程思路：<br>包装一个dubbo数据，其中包含com.rometools.rome.feed.impl.ToStringBean对象，ToStringBean对象中有一个经过包装的com.sun.rowset.JdbcRowSetImpl对象；在dubbo服务端接收数据解析后因为POC中指定的service不存在，所以会抛出错误，在抛出错误时构造错误对象的传参拼接隐式触发com.alibaba.dubbo.rpc.RpcInvocation.toString方法；此方法最终调用com.rometools.rome.feed.impl.ToStringBean.toString方法完成toString，而com.rometools.rome.feed.impl.ToStringBean.toString方法调用了带参数的com.rometools.rome.feed.impl.ToStringBean.toString(String prefix)方法，在此过程中，带参的toString方法遍历Method，并触发JNDI，实现JNDI注入，相对于指定正确service的POC，绕过了以反序列化触发的过程。</p>
+<h3 id="尝试分析反序列化型流程"><a href="#尝试分析反序列化型流程" class="headerlink" title="尝试分析反序列化型流程"></a>尝试分析反序列化型流程</h3><p>再尝试一下反序列化方式触发的流程，由于0.1版本项目的spring boot有些问题，没能找到原因，推测是spring boot的版本太旧有些冲突，更换个2.7.3版本试试，因为版本相隔甚远，使用代码结构有些变化，先测试一下报错的POC，正常触发</p>
+<p><img src="/images/210222/dubbo/Image%20%5B57%5D.png" alt=""></p>
+<p>接下来根据网上师傅的思路通过项目中的customer获得序列化对象，使用demo包装一下，这里注册接口相关就略过了</p>
+<p><img src="/images/210222/dubbo/Image%20%5B58%5D.png" alt=""></p>
+<p>此时我们设置好ldap地址与dubbo地址即可触发POC</p>
+<p><img src="/images/210222/dubbo/Image%20%5B59%5D.png" alt=""></p>
+<p>但是这样子看起来就像是“自己打自己”，我们可以把dubbo数据提取出来，找到传输数据的TCP包</p>
+<p><img src="/images/210222/dubbo/Image%20%5B60%5D.png" alt=""></p>
+<p>然后扒拉一个脚本改成py3.8的用法（原来是2.7）</p>
+<p><img src="/images/210222/dubbo/Image%20%5B61%5D.png" alt=""></p>
+<p>执行，触发POC</p>
+<p><img src="/images/210222/dubbo/Image%20%5B62%5D.png" alt=""></p>
+<p>这里遇到个问题customer的版本号没生效，所以将provider的版本号去掉，否则会进入错误触发方式而不是反序列化</p>
+<p><img src="/images/210222/dubbo/Image%20%5B63%5D.png" alt=""></p>
+<p><img src="/images/210222/dubbo/Image%20%5B64%5D.png" alt=""></p>
+<p>调用堆栈:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">toString:<span class="number">158</span>, ToStringBean (com.rometools.rome.feed.impl)</span><br><span class="line">toString:<span class="number">129</span>, ToStringBean (com.rometools.rome.feed.impl)</span><br><span class="line">beanHashCode:<span class="number">198</span>, EqualsBean (com.rometools.rome.feed.impl)</span><br><span class="line">hashCode:<span class="number">180</span>, EqualsBean (com.rometools.rome.feed.impl)</span><br><span class="line">hash:<span class="number">338</span>, HashMap (java.util)</span><br><span class="line">put:<span class="number">611</span>, HashMap (java.util)</span><br><span class="line">doReadMap:<span class="number">145</span>, MapDeserializer (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readMap:<span class="number">126</span>, MapDeserializer (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readObject:<span class="number">2703</span>, Hessian2Input (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readObject:<span class="number">2278</span>, Hessian2Input (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readObject:<span class="number">2080</span>, Hessian2Input (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readObject:<span class="number">2074</span>, Hessian2Input (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readObject:<span class="number">92</span>, Hessian2ObjectInput (org.apache.dubbo.common.serialize.hessian2)</span><br><span class="line">decode:<span class="number">116</span>, DecodeableRpcInvocation (org.apache.dubbo.rpc.protocol.dubbo)</span><br><span class="line">decode:<span class="number">73</span>, DecodeableRpcInvocation (org.apache.dubbo.rpc.protocol.dubbo)</span><br><span class="line">decodeBody:<span class="number">132</span>, DubboCodec (org.apache.dubbo.rpc.protocol.dubbo)</span><br><span class="line">decode:<span class="number">122</span>, ExchangeCodec (org.apache.dubbo.remoting.exchange.codec)</span><br><span class="line">decode:<span class="number">82</span>, ExchangeCodec (org.apache.dubbo.remoting.exchange.codec)</span><br><span class="line">decode:<span class="number">48</span>, DubboCountCodec (org.apache.dubbo.rpc.protocol.dubbo)</span><br><span class="line">decode:<span class="number">90</span>, NettyCodecAdapter$InternalDecoder (org.apache.dubbo.remoting.transport.netty4)</span><br><span class="line">decodeRemovalReentryProtection:<span class="number">502</span>, ByteToMessageDecoder (io.netty.handler.codec)</span><br><span class="line">callDecode:<span class="number">441</span>, ByteToMessageDecoder (io.netty.handler.codec)</span><br><span class="line">channelRead:<span class="number">278</span>, ByteToMessageDecoder (io.netty.handler.codec)</span><br><span class="line">invokeChannelRead:<span class="number">374</span>, AbstractChannelHandlerContext (io.netty.channel)</span><br><span class="line">invokeChannelRead:<span class="number">360</span>, AbstractChannelHandlerContext (io.netty.channel)</span><br><span class="line">fireChannelRead:<span class="number">352</span>, AbstractChannelHandlerContext (io.netty.channel)</span><br><span class="line">channelRead:<span class="number">1408</span>, DefaultChannelPipeline$HeadContext (io.netty.channel)</span><br><span class="line">invokeChannelRead:<span class="number">374</span>, AbstractChannelHandlerContext (io.netty.channel)</span><br><span class="line">invokeChannelRead:<span class="number">360</span>, AbstractChannelHandlerContext (io.netty.channel)</span><br><span class="line">fireChannelRead:<span class="number">930</span>, DefaultChannelPipeline (io.netty.channel)</span><br><span class="line">read:<span class="number">163</span>, AbstractNioByteChannel$NioByteUnsafe (io.netty.channel.nio)</span><br><span class="line">processSelectedKey:<span class="number">682</span>, NioEventLoop (io.netty.channel.nio)</span><br><span class="line">processSelectedKeysOptimized:<span class="number">617</span>, NioEventLoop (io.netty.channel.nio)</span><br><span class="line">processSelectedKeys:<span class="number">534</span>, NioEventLoop (io.netty.channel.nio)</span><br><span class="line">run:<span class="number">496</span>, NioEventLoop (io.netty.channel.nio)</span><br><span class="line">run:<span class="number">906</span>, SingleThreadEventExecutor$<span class="number">5</span> (io.netty.util.concurrent)</span><br><span class="line">run:<span class="number">74</span>, ThreadExecutorMap$<span class="number">2</span> (io.netty.util.internal)</span><br><span class="line">run:<span class="number">30</span>, FastThreadLocalRunnable (io.netty.util.concurrent)</span><br><span class="line">run:<span class="number">748</span>, Thread (java.lang)</span><br></pre></td></tr></table></figure>
+
+<p>最终也是通过toString触发，但不同在于，此处是用decode方法链触发Hessian2重写的readObject方法，通过HashMap调用触发Rome中的beanHashCode在此处调用重写的toString方法，与通过错误触发一样最终触发的是toString造成JNDI注入。</p>
+<p>顺便提一句复现使用LDAP服务进行JNDI调用，在高版本Java中（例如1.8_251）中不允许直接使用外部的DataSource，所以复现不会成功，文中复现使用了1.8_131 jre环境。根据一些利用工具描述jdk8u121～jdk8u191之间可以选择ldap服务进行攻击。在<a href="https://xz.aliyun.com/t/6633#toc-7" target="_blank" rel="noopener">JNDI注入原理及利用</a>中有相关叙述可供参考，后续也要深入学习一下反序列化相关的利用方式与相关知识，例如JNDI等。</p>
+<hr>
+<p><strong>参考链接：</strong></p>
+<p><a href="https://y4er.com/post/apache-dubbo-cve-2019-17564/" target="_blank" rel="noopener">https://y4er.com/post/apache-dubbo-cve-2019-17564/</a><br><a href="https://my.oschina.net/u/4593034/blog/4418776" target="_blank" rel="noopener">https://my.oschina.net/u/4593034/blog/4418776</a><br><a href="https://l3yx.github.io/2020/08/25/Apache-Dubbo-反序列化漏洞复现笔记/#CVE-2019-17564" target="_blank" rel="noopener">https://l3yx.github.io/2020/08/25/Apache-Dubbo-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0%E7%AC%94%E8%AE%B0/#CVE-2019-17564</a><br><a href="http://www.code2sec.com/cve-2020-1948-dubbo-fan-xu-lie-hua-lou-dong.html" target="_blank" rel="noopener">http://www.code2sec.com/cve-2020-1948-dubbo-fan-xu-lie-hua-lou-dong.html</a><br><a href="https://www.sevenyuan.cn/2020/07/21/java/2020-07-21-dubbo-cve-2020-1948/" target="_blank" rel="noopener">https://www.sevenyuan.cn/2020/07/21/java/2020-07-21-dubbo-cve-2020-1948/</a><br><a href="https://www.anquanke.com/post/id/209251#h3-12" target="_blank" rel="noopener">https://www.anquanke.com/post/id/209251#h3-12</a><br><a href="https://www.freebuf.com/vuls/115849.html" target="_blank" rel="noopener">https://www.freebuf.com/vuls/115849.html</a><br><a href="https://xz.aliyun.com/t/6633" target="_blank" rel="noopener">https://xz.aliyun.com/t/6633</a><br><a href="https://www.mail-archive.com/dev@dubbo.apache.org/msg06544.html" target="_blank" rel="noopener">https://www.mail-archive.com/dev@dubbo.apache.org/msg06544.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/02/22/powershell%E7%BC%96%E7%A0%81%E8%B8%A9%E5%9D%91/" rel="prev" title="powershell编码踩坑">
+      <i class="fa fa-chevron-left"></i> powershell编码踩坑
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/03/03/dubbo%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0-%E7%BB%AD/" rel="next" title="dubbo漏洞学习-续">
+      dubbo漏洞学习-续 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CVE-2019-17564"><span class="nav-number">1.</span> <span class="nav-text">CVE-2019-17564</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#复现"><span class="nav-number">1.1.</span> <span class="nav-text">复现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结下利用条件"><span class="nav-number">1.2.</span> <span class="nav-text">总结下利用条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#简单分析"><span class="nav-number">1.3.</span> <span class="nav-text">简单分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CVE-2020-1948"><span class="nav-number">2.</span> <span class="nav-text">CVE-2020-1948</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#复现-1"><span class="nav-number">2.1.</span> <span class="nav-text">复现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#尝试分析"><span class="nav-number">2.2.</span> <span class="nav-text">尝试分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#尝试分析反序列化型流程"><span class="nav-number">2.3.</span> <span class="nav-text">尝试分析反序列化型流程</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">0xSky</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">0xSky</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
