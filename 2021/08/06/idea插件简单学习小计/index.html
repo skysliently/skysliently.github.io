@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="由于希望在陌陌的idea安全插件上进行二开，学习idea插件开发，遂有以下记录。吐槽下jetBrians没有什么API说明文档，了解功能基本靠读名字、看已有插件与调试。 配置配置idea，网上前辈提到最好使用社区版进行开发，社区版开源利于调试，遂下载idea 2020.3社区版。设置JDK  2020版idea使用的是JDK11所以添加JDK11，再将当前社区版IDE导入并下载对应版本的源代码（g">
+<meta property="og:type" content="article">
+<meta property="og:title" content="idea插件简单学习小计">
+<meta property="og:url" content="http://yoursite.com/2021/08/06/idea%E6%8F%92%E4%BB%B6%E7%AE%80%E5%8D%95%E5%AD%A6%E4%B9%A0%E5%B0%8F%E8%AE%A1/index.html">
+<meta property="og:site_name" content="自动笔记生成器">
+<meta property="og:description" content="由于希望在陌陌的idea安全插件上进行二开，学习idea插件开发，遂有以下记录。吐槽下jetBrians没有什么API说明文档，了解功能基本靠读名字、看已有插件与调试。 配置配置idea，网上前辈提到最好使用社区版进行开发，社区版开源利于调试，遂下载idea 2020.3社区版。设置JDK  2020版idea使用的是JDK11所以添加JDK11，再将当前社区版IDE导入并下载对应版本的源代码（g">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B0%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B1%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B2%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B3%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B4%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B5%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B6%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B7%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B8%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B9%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B10%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B11%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B12%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B13%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B14%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B15%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B16%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B17%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B18%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B19%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B20%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B21%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B22%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B23%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B24%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B25%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B26%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B27%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B28%5D.png">
+<meta property="article:published_time" content="2021-08-06T09:19:56.000Z">
+<meta property="article:modified_time" content="2021-08-06T09:40:46.889Z">
+<meta property="article:author" content="0xSky">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/images/210806/idea_plugin/Image%20%5B0%5D.png">
+
+<link rel="canonical" href="http://yoursite.com/2021/08/06/idea%E6%8F%92%E4%BB%B6%E7%AE%80%E5%8D%95%E5%AD%A6%E4%B9%A0%E5%B0%8F%E8%AE%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>idea插件简单学习小计 | 自动笔记生成器</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">自动笔记生成器</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/08/06/idea%E6%8F%92%E4%BB%B6%E7%AE%80%E5%8D%95%E5%AD%A6%E4%B9%A0%E5%B0%8F%E8%AE%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0xSky">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="自动笔记生成器">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          idea插件简单学习小计
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-08-06 17:19:56 / 修改时间：17:40:46" itemprop="dateCreated datePublished" datetime="2021-08-06T17:19:56+08:00">2021-08-06</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>由于希望在陌陌的idea安全插件上进行二开，学习idea插件开发，遂有以下记录。吐槽下jetBrians没有什么API说明文档，了解功能基本靠读名字、看已有插件与调试。</p>
+<h6 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h6><p>配置idea，网上前辈提到最好使用社区版进行开发，社区版开源利于调试，遂下载idea 2020.3社区版。<br>设置JDK</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B0%5D.png" alt=""></p>
+<p>2020版idea使用的是JDK11所以添加JDK11，再将当前社区版IDE导入并下载对应版本的源代码（gayhub）导入</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B1%5D.png" alt=""></p>
+<p>搭建好DevKit环境后（官方的名字）按照网上的教程写了个action，不过遇到了jvm相关的错误。<br>由于陌陌的项目是的是官方的另外一种gradle构建方式，于是转而尝试这种方式。<br>在拉取依赖时频繁报错，这里可以切换maven镜像的地址，参考gradle文档：<a href="https://docs.gradle.org/current/userguide/declaring_repositories.html#sec:case-for-maven-local，直接使用本地setting.xml。" target="_blank" rel="noopener">https://docs.gradle.org/current/userguide/declaring_repositories.html#sec:case-for-maven-local，直接使用本地setting.xml。</a><br>官方文档中说明gradle环境所需的两个插件是默认启用的，所以不需要额外下载，建议直接安装官网<a href="https://plugins.jetbrains.com/docs/intellij/gradle-build-system.html说明进行操作，网上不少文章有些偏差。这里注意在配置时最好使用中央maven仓库并选择网络较好的场所（都懂）。" target="_blank" rel="noopener">https://plugins.jetbrains.com/docs/intellij/gradle-build-system.html说明进行操作，网上不少文章有些偏差。这里注意在配置时最好使用中央maven仓库并选择网络较好的场所（都懂）。</a></p>
+<h6 id="现有插件"><a href="#现有插件" class="headerlink" title="现有插件"></a>现有插件</h6><p>由于官方文档对于PSI没有非常详细的说明，所以想要实现功能基本只能通过看官方示例代码与已有的开源插件代码来学习，这里就简单记录一下在陌陌插件中会用到的一些组件、方法以及接口等。</p>
+<p>mybatis配置型检测插件 MybatisXmlSQLi：<br>此类继承自MomoBaseLocalInspectionTool字面意思基础本地检测工具，父类又继承于jetbrains的AbstractBaseJavaLocalInspectionTool其中定义了checkMethod、checkClass等方法。<br>实现检测的方法是buildVisitor，这是定义于com.intellij.codeInspection.LocalInspectionTool中的方法，在定义处的描述表明重写另外一个重载方法就可以实现自己的检查逻辑了。此方法返回了一个 PsiElementVisitor对象。</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B2%5D.png" alt=""></p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B3%5D.png" alt=""></p>
+<p>插件在重写buildVisitor后返回了一个 XmlElementVisitor对象，从命名就能得知这是一个针对XML的元素访问器，重写后获得一个XmlText对象，并检测了当前位置是否是最外部标签且父标签是否是sql或mapper，满足条件则跳出检测逻辑，这样做是因为在mapper标签下需要创建如select、insert等标签进行语句定义所以直接在mapper下的语句不需要检测。然后通过XmlText获取一个 XmlDocument并检测是否引用了mybatis的DTD文件，通过两个检测步骤确定了输入内容是需要检测的mybatis配置文件。<br>详细的检测逻辑暂略，可参考源代码，这里主要是通过对插件学习了解jetbrains所提供的一些接口功能等。<br>在确认被检测字段是一个问题后，registerProblem方法的第四个参数传入了一个LocalQuickFix（可以是多个），提供修复，此处的MybatisXmlSQLiQuickFix通过实现LocalQuickFix接口中的applyFix（定义于QuickFix<D>中）实现修复逻辑，具体修复逻辑略过，主要是根据几种情况（where in、like以及其他）构造替换代码。当然这里的修复方法对于外部传参的order by不能有效地修复，这种依然需要开发进行针对性的修复，包括其他复杂的传参查询修复。</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B4%5D.png" alt=""></p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B5%5D.png" alt=""></p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B6%5D.png" alt=""></p>
+<p><strong>硬编码IP检测插件 HardcodedIp：</strong><br>主要是检测Java文件中的硬编码IP，所以在此处buildVisitor中实现的是JavaElementVisitor，在对象中重写了visitLiteralExpression方法，从字面上理解指字符型的表达式，具体可以通过调试来观察。在visitLiteralExpression中下个断点，使用gradle插件runIde启动调试模式，写一个Java文件观察是否触发检测，在下图中的赋值只有第二种引用赋值不会触发visitLiteralExpression方法。</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B7%5D.png" alt=""></p>
+<p>而插件限制了只有JavaTokenType.STRING_LITERAL才会触发检测，所以最终只有第一种字符表达式会触发检测逻辑。后续检测字符是否是IP逻辑略过，插件标明了检测逻辑来源。</p>
+<p><strong>硬编码凭证检测插件 HardcodedCredentials：</strong><br>与IP检测一样实现JavaElementVisitor，但重写方法有所不同，这个插件重写了visitLocalVariable，visitAssignmentExpression，visitField，visitMethodCallExpression几个方法，检测思路主要是针对变量名称是否命名为password、token等以及在赋值时有没有password=这种字符。<br>visitLocalVariable：<br>如图所示，除了类下的Field内容其他变量都会触发动作，触发遵循作用域，在某个作用域发生改变就检测此作用域与子域，例如在method中修改变量不会触发main函数中的检测。</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B8%5D.png" alt=""></p>
+<p>修改longIP，触发对main函数中内容的检测</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B9%5D.png" alt=""></p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B10%5D.png" alt=""></p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B11%5D.png" alt=""></p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B12%5D.png" alt=""></p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B13%5D.png" alt=""></p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B14%5D.png" alt=""></p>
+<p>visitAssignmentExpression：<br>在声明型进行赋值时触发</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B15%5D.png" alt=""></p>
+<p>此处还判断了是否是引用赋值</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B16%5D.png" alt=""></p>
+<p>visitField：<br>修改field内容时触发</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B17%5D.png" alt=""></p>
+<p>visitMethodCallExpression：<br>此方法主要是为了使用函数来赋值的情况，例如以下两种情况，都会触发，在工程化操作数据时非常常见</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B18%5D.png" alt=""></p>
+<p>XXE检测插件XxeInspector：<br>此处的检测主要分为两种visitMethodCallExpression与visitNewExpression这是因为常见的XXE解析三方包在获取解析对象时主要是例如：<br>DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();<br>SAXBuilder builder = new SAXBuilder();<br>这两种形式，visitNewExpression在使用new获取对象时触发；visitMethodCallExpression则在使用类加载机制，利用方法调用创建时触发。<br>在检测插件中对10中情况进行了检测，检测源信息来自于owasp的XXE Prevention Cheat Sheet。</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B19%5D.png" alt=""></p>
+<p>顺手记下怎么修改插件，个人觉得找已经实现的或通过对象结构之间的关系去寻找jetbrains实现的方法即可，比如下面这个。在检测硬编码凭证的插件中我没有找到对类似于String str = new String(“password”)这类方式的校验，在visitMethodCallExpression中只检测了使用Hashtable以及JDBC连接两种情况，所以将这个检测也加入进去。<br>首先在现有的逻辑中，上述的声明赋值会进入visitAssignmentExpression与visitMethodCallExpression两个重写了的检测逻辑中，第二个前面说过了不会生效，而在visitAssignmentExpression由于检测逻辑判断了表达式是否是PsiLiteralExpression类型，需要检测的内容是PsiNewExpressionImpl也就是PsiNewExpression类型，所以会被忽略。</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B20%5D.png" alt=""></p>
+<p>所以在此外进行额外匹配</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B21%5D.png" alt=""></p>
+<p>下一步则是要对赋值的内容进行复杂度判断，辨别内容是否想是一个密码，复杂度判断逻辑沿用原有插件的逻辑，这里需要做的就是获取字符串内容。先说现有方法，已实现的方法直接使用ExpressionUtils.getLiteral(PsiExpression expression)获取，尝试使用，结果是null，此路不通。</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B22%5D.png" alt=""></p>
+<p>换一个思路，找一找PsiNewExpressionImpl实现的方法中是否存在获取参数的方法，存在一个getArgumentList方法，从命名上来看就是获取参数列表</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B23%5D.png" alt=""></p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B24%5D.png" alt=""></p>
+<p>我们查看具体返回的类型，这里我选择直接在调试时输入代码查看并结合源代码，更容易理解，其中getExpressions()方法从字面上来看是获取表达式的方法，直接看调试。</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B25%5D.png" alt=""></p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B26%5D.png" alt=""></p>
+<p>显然已经找到想找的内容了，由于此处参数只会有一个所以直接取0号索引即可，完成剩下代码即可检测这个内容了。</p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B27%5D.png" alt=""></p>
+<p><img src="/images/210806/idea_plugin/Image%20%5B28%5D.png" alt=""></p>
+<p>通过以上的方法，我对原有的硬编码、mybatis配置检测插件进行了一些修改并把cobra里的几个检测规则也搬了进来，总的来说还是有些收获的。菜鸟的自我修养:)</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/07/20/PC%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%8F%90%E5%8F%96%E5%AD%A6%E4%B9%A0%E9%9A%8F%E8%AE%B0/" rel="prev" title="PC微信小程序提取学习随记">
+      <i class="fa fa-chevron-left"></i> PC微信小程序提取学习随记
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-6"><a class="nav-link" href="#配置"><span class="nav-number">1.</span> <span class="nav-text">配置</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#现有插件"><span class="nav-number">2.</span> <span class="nav-text">现有插件</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">0xSky</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">0xSky</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
