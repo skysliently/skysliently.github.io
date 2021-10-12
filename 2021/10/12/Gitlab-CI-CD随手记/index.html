@@ -20,25 +20,29 @@
     var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="记录一次使用powershell中遇到的小坑。在使用 ysoserial生成测试payload时，本地测试不过，使用最简单的URLDNS探测也报错   报错显示无效的流头部，可以发现其头部为FF FE ，而Java 对象序列化后其头部应该是AC ED ，为什么为出现这种情况呢 ，搜一下，是UTF-16的bom头部  文件打开后也显示UTF-16  那么大概原因是找到了，和编码有关，又搜到了一位师傅">
+  <meta name="description" content="想用Gitlab 自动触发sonar，这就涉及到Gitlab CI&#x2F;CD，随手记录一下。 安装runner Gitlab使用runner来运行流水线事务，这种可拓展的事务模式可以让Gitlab不会受其所在服务器资源性能的限制。这里我使用docker安装一个runner，在CI&#x2F;CD设置中有链接，跟着走就可以，在安装后还有注册过程，注册用到的地址与token在设置页面中有，注意，这样注册以后这个ru">
 <meta property="og:type" content="article">
-<meta property="og:title" content="powershell编码踩坑">
-<meta property="og:url" content="http://yoursite.com/2021/02/22/powershell%E7%BC%96%E7%A0%81%E8%B8%A9%E5%9D%91/index.html">
+<meta property="og:title" content="Gitlab CI&#x2F;CD随手记">
+<meta property="og:url" content="http://yoursite.com/2021/10/12/Gitlab-CI-CD%E9%9A%8F%E6%89%8B%E8%AE%B0/index.html">
 <meta property="og:site_name" content="自动笔记生成器">
-<meta property="og:description" content="记录一次使用powershell中遇到的小坑。在使用 ysoserial生成测试payload时，本地测试不过，使用最简单的URLDNS探测也报错   报错显示无效的流头部，可以发现其头部为FF FE ，而Java 对象序列化后其头部应该是AC ED ，为什么为出现这种情况呢 ，搜一下，是UTF-16的bom头部  文件打开后也显示UTF-16  那么大概原因是找到了，和编码有关，又搜到了一位师傅">
+<meta property="og:description" content="想用Gitlab 自动触发sonar，这就涉及到Gitlab CI&#x2F;CD，随手记录一下。 安装runner Gitlab使用runner来运行流水线事务，这种可拓展的事务模式可以让Gitlab不会受其所在服务器资源性能的限制。这里我使用docker安装一个runner，在CI&#x2F;CD设置中有链接，跟着走就可以，在安装后还有注册过程，注册用到的地址与token在设置页面中有，注意，这样注册以后这个ru">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://yoursite.com/images/210222/1.png">
-<meta property="og:image" content="http://yoursite.com/images/210222/2.png">
-<meta property="og:image" content="http://yoursite.com/images/210222/3.png">
-<meta property="og:image" content="http://yoursite.com/images/210222/4.png">
-<meta property="og:image" content="http://yoursite.com/images/210222/5.png">
-<meta property="article:published_time" content="2021-02-22T02:04:24.000Z">
-<meta property="article:modified_time" content="2021-02-22T02:22:44.312Z">
+<meta property="og:image" content="http://yoursite.com/images/211012/gitlab_ci_cd/Image.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/gitlab_ci_cd/Image%20%5B1%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/gitlab_ci_cd/Image%20%5B2%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/gitlab_ci_cd/Image%20%5B3%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/gitlab_ci_cd/Image%20%5B4%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/gitlab_ci_cd/Image%20%5B5%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/gitlab_ci_cd/Image%20%5B6%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/gitlab_ci_cd/Image%20%5B7%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/gitlab_ci_cd/Image%20%5B8%5D.png">
+<meta property="article:published_time" content="2021-10-12T08:38:36.000Z">
+<meta property="article:modified_time" content="2021-10-12T08:43:12.771Z">
 <meta property="article:author" content="0xSky">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://yoursite.com/images/210222/1.png">
+<meta name="twitter:image" content="http://yoursite.com/images/211012/gitlab_ci_cd/Image.png">
 
-<link rel="canonical" href="http://yoursite.com/2021/02/22/powershell%E7%BC%96%E7%A0%81%E8%B8%A9%E5%9D%91/">
+<link rel="canonical" href="http://yoursite.com/2021/10/12/Gitlab-CI-CD%E9%9A%8F%E6%89%8B%E8%AE%B0/">
 
 
 <script id="page-configurations">
@@ -51,7 +55,7 @@
   };
 </script>
 
-  <title>powershell编码踩坑 | 自动笔记生成器</title>
+  <title>Gitlab CI/CD随手记 | 自动笔记生成器</title>
   
 
 
@@ -156,7 +160,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/02/22/powershell%E7%BC%96%E7%A0%81%E8%B8%A9%E5%9D%91/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/10/12/Gitlab-CI-CD%E9%9A%8F%E6%89%8B%E8%AE%B0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -169,7 +173,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          powershell编码踩坑
+          Gitlab CI/CD随手记
         </h1>
 
         <div class="post-meta">
@@ -180,7 +184,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2021-02-22 10:04:24 / 修改时间：10:22:44" itemprop="dateCreated datePublished" datetime="2021-02-22T10:04:24+08:00">2021-02-22</time>
+              <time title="创建时间：2021-10-12 16:38:36 / 修改时间：16:43:12" itemprop="dateCreated datePublished" datetime="2021-10-12T16:38:36+08:00">2021-10-12</time>
             </span>
 
           
@@ -194,19 +198,30 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>记录一次使用powershell中遇到的小坑。<br>在使用 ysoserial生成测试payload时，本地测试不过，使用最简单的URLDNS探测也报错</p>
-<p><img src="/images/210222/1.png" alt="1"></p>
-<p><img src="/images/210222/2.png" alt="1"></p>
-<p>报错显示无效的流头部，可以发现其头部为FF FE ，而Java 对象序列化后其头部应该是AC ED ，为什么为出现这种情况呢 ，搜一下，是UTF-16的bom头部</p>
-<p><img src="/images/210222/3.png" alt="1"></p>
-<p>文件打开后也显示UTF-16</p>
-<p><img src="/images/210222/4.png" alt="1"></p>
-<p>那么大概原因是找到了，和编码有关，又搜到了一位师傅遇到了相同的情况印证了我的猜想<a href="https://www.cnblogs.com/Primzahl/p/10834207.html" target="_blank" rel="noopener">powershell 中文系统默认UTF-16 (LE) UNICODE编码 使用时需小心</a><br>使用cmd执行相同命令生成的文件头部正常，也可以正常执行</p>
-<p><img src="/images/210222/5.png" alt="1"></p>
-<p>同时师傅的文章中给出了使用powershell的命令 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar ysoserial.jar Groovy1 &quot;powershell.exe -NonI -W Hidden -NoP -Exec Bypass -Enc YwBhAGwAYwA&#x3D;&quot; | Out-File -Encoding default payload3.bin</span><br></pre></td></tr></table></figure>
-
-<p>增加Out-File -Encoding default<br>马克马克</p>
+        <p>想用Gitlab 自动触发sonar，这就涉及到Gitlab CI/CD，随手记录一下。</p>
+<p>安装runner</p>
+<p>Gitlab使用runner来运行流水线事务，这种可拓展的事务模式可以让Gitlab不会受其所在服务器资源性能的限制。这里我使用docker安装一个runner，在CI/CD设置中有链接，跟着走就可以，在安装后还有注册过程，注册用到的地址与token在设置页面中有，注意，这样注册以后这个runner是这个project的特有runner，再注意，请仔细阅读文档。</p>
+<p><img src="/images/211012/gitlab_ci_cd/Image.png" alt=""></p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B1%5D.png" alt=""></p>
+<p>在安装、注册完成后，可以设置一下允许运行没有标签的job，或者在编写事务时要使用runner设置的tag，lock to current project也可以去掉，这样这个runner就可以被其他project使用了</p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B2%5D.png" alt=""></p>
+<p>根据sonar文档，在项目中要设置变量记录sonar的token与地址，设置位于settings-CI/CD-variables，可参考<a href="https://docs.sonarqube.org/8.5/analysis/gitlab-cicd/" target="_blank" rel="noopener">sonar doc</a> 我参考的是8.5的doc可以根据版本需要参考对应doc</p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B3%5D.png" alt=""></p>
+<p>后续直接在sonar抄一个.gitlab-ci.yml就可以咯，我们也可以设置更多脚本比如运行py脚本等来丰富任务。这里要注意社区版的Gitlab只能支持一个分支的事务可以新建也可以在主分支上执行事务，而且创建者必须是project的所有者。等事务运行完成我们就可以在sonar上查看了，注意要运行自定义规则需要在项目第一次运行后在sonar上进行设置，目前我没有找到可以初次运行指定规则的方法。</p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B4%5D.png" alt=""></p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B5%5D.png" alt=""></p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B6%5D.png" alt=""></p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B7%5D.png" alt=""></p>
+<p>maven遇到的问题</p>
+<p>因为sonar扫描maven项目时需要用maven进行编译，所以脚本中指定了一个maven镜像可以根据需要在docker hub中选择，配置文件中是默认的镜像在脚本中可以进行复写，但是有些依赖是在私有环境中才有的，那就需要修改settings.xml文件。这里可以修改config.toml，我将settings上传到docker的宿主机（注意，是docker宿主机，因为我在安装runner时使用的是docker volume 挂载了一个空间到容器中，所以这里/workspace对应docker宿主机的空间，/root/workspace代表脚本中拉取maven镜像的空间，详情见<a href="https://docs.gitlab.com/runner/install/docker.html#option-2-use-docker-volumes-to-start-the-runner-container）中的workspace文件夹下，并进行设置。" target="_blank" rel="noopener">https://docs.gitlab.com/runner/install/docker.html#option-2-use-docker-volumes-to-start-the-runner-container）中的workspace文件夹下，并进行设置。</a></p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B8%5D.png" alt=""></p>
+<p>然后重启容器使配置生效，在事务上加上指定settings文件，运行job即可。</p>
+<p>参考：</p>
+<p><a href="https://www.cnblogs.com/kanyun/p/14700624.html" target="_blank" rel="noopener">https://www.cnblogs.com/kanyun/p/14700624.html</a></p>
+<p><a href="https://docs.gitlab.com/runner/install/docker.html" target="_blank" rel="noopener">https://docs.gitlab.com/runner/install/docker.html</a></p>
+<p><a href="https://docs.gitlab.com/runner/register/index.html#docker" target="_blank" rel="noopener">https://docs.gitlab.com/runner/register/index.html#docker</a></p>
+<p><a href="https://docs.sonarqube.org/8.5/analysis/gitlab-cicd/" target="_blank" rel="noopener">https://docs.sonarqube.org/8.5/analysis/gitlab-cicd/</a></p>
+<p><a href="https://docs.sonarqube.org/latest/analysis/gitlab-integration/" target="_blank" rel="noopener">https://docs.sonarqube.org/latest/analysis/gitlab-integration/</a></p>
 
     </div>
 
@@ -222,12 +237,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2021/02/07/MinIO%E6%9C%AA%E6%8E%88%E6%9D%83SSRF%E6%BC%8F%E6%B4%9E%EF%BC%88CVE-2021-21287%EF%BC%89%E7%AE%80%E5%8D%95%E5%A4%8D%E7%8E%B0/" rel="prev" title="MinIO未授权SSRF漏洞（CVE-2021-21287）简单复现">
-      <i class="fa fa-chevron-left"></i> MinIO未授权SSRF漏洞（CVE-2021-21287）简单复现
+    <a href="/2021/09/18/%E8%BF%9C%E7%A8%8B%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8C%97/" rel="prev" title="远程文件操作指北">
+      <i class="fa fa-chevron-left"></i> 远程文件操作指北
     </a></div>
       <div class="post-nav-item">
-    <a href="/2021/02/23/dubbo%E8%BF%91%E6%9C%9F%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/" rel="next" title="dubbo近期漏洞学习">
-      dubbo近期漏洞学习 <i class="fa fa-chevron-right"></i>
+    <a href="/2021/10/12/%E7%81%AB%E7%BA%BF%E6%B4%9E%E6%80%81IAST%E7%AE%80%E5%8D%95%E8%AF%95%E7%94%A8/" rel="next" title="火线洞态IAST简单试用">
+      火线洞态IAST简单试用 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>

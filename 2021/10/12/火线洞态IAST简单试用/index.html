@@ -20,25 +20,36 @@
     var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="记录一次使用powershell中遇到的小坑。在使用 ysoserial生成测试payload时，本地测试不过，使用最简单的URLDNS探测也报错   报错显示无效的流头部，可以发现其头部为FF FE ，而Java 对象序列化后其头部应该是AC ED ，为什么为出现这种情况呢 ，搜一下，是UTF-16的bom头部  文件打开后也显示UTF-16  那么大概原因是找到了，和编码有关，又搜到了一位师傅">
+  <meta name="description" content="试用了洞态的开源IAST，有些坑，记录记录。 首先在21年中，火线就开源了Java agent探针，可配合在线平台使用，企业也可申请获取源码本地使用，在完全开源后文档存在许多的不一致，导致我看一会楞是没看懂。官方文档中的最佳实践也是那时候的，有些许区别，这里我就记个流水账。 出于学习平台功能的目的首先推荐直接用官方写好的docker脚本进行安装，简单快捷又傻瓜，GitHub上deploy项目就是，">
 <meta property="og:type" content="article">
-<meta property="og:title" content="powershell编码踩坑">
-<meta property="og:url" content="http://yoursite.com/2021/02/22/powershell%E7%BC%96%E7%A0%81%E8%B8%A9%E5%9D%91/index.html">
+<meta property="og:title" content="火线洞态IAST简单试用">
+<meta property="og:url" content="http://yoursite.com/2021/10/12/%E7%81%AB%E7%BA%BF%E6%B4%9E%E6%80%81IAST%E7%AE%80%E5%8D%95%E8%AF%95%E7%94%A8/index.html">
 <meta property="og:site_name" content="自动笔记生成器">
-<meta property="og:description" content="记录一次使用powershell中遇到的小坑。在使用 ysoserial生成测试payload时，本地测试不过，使用最简单的URLDNS探测也报错   报错显示无效的流头部，可以发现其头部为FF FE ，而Java 对象序列化后其头部应该是AC ED ，为什么为出现这种情况呢 ，搜一下，是UTF-16的bom头部  文件打开后也显示UTF-16  那么大概原因是找到了，和编码有关，又搜到了一位师傅">
+<meta property="og:description" content="试用了洞态的开源IAST，有些坑，记录记录。 首先在21年中，火线就开源了Java agent探针，可配合在线平台使用，企业也可申请获取源码本地使用，在完全开源后文档存在许多的不一致，导致我看一会楞是没看懂。官方文档中的最佳实践也是那时候的，有些许区别，这里我就记个流水账。 出于学习平台功能的目的首先推荐直接用官方写好的docker脚本进行安装，简单快捷又傻瓜，GitHub上deploy项目就是，">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://yoursite.com/images/210222/1.png">
-<meta property="og:image" content="http://yoursite.com/images/210222/2.png">
-<meta property="og:image" content="http://yoursite.com/images/210222/3.png">
-<meta property="og:image" content="http://yoursite.com/images/210222/4.png">
-<meta property="og:image" content="http://yoursite.com/images/210222/5.png">
-<meta property="article:published_time" content="2021-02-22T02:04:24.000Z">
-<meta property="article:modified_time" content="2021-02-22T02:22:44.312Z">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B1%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B2%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B3%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B4%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B5%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B6%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B7%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B8%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B9%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B10%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B11%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B12%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B13%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B14%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211012/iast/Image%20%5B15%5D.png">
+<meta property="article:published_time" content="2021-10-12T08:44:17.000Z">
+<meta property="article:modified_time" content="2021-10-12T08:49:42.838Z">
 <meta property="article:author" content="0xSky">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://yoursite.com/images/210222/1.png">
+<meta name="twitter:image" content="http://yoursite.com/images/211012/iast/Image.png">
 
-<link rel="canonical" href="http://yoursite.com/2021/02/22/powershell%E7%BC%96%E7%A0%81%E8%B8%A9%E5%9D%91/">
+<link rel="canonical" href="http://yoursite.com/2021/10/12/%E7%81%AB%E7%BA%BF%E6%B4%9E%E6%80%81IAST%E7%AE%80%E5%8D%95%E8%AF%95%E7%94%A8/">
 
 
 <script id="page-configurations">
@@ -51,7 +62,7 @@
   };
 </script>
 
-  <title>powershell编码踩坑 | 自动笔记生成器</title>
+  <title>火线洞态IAST简单试用 | 自动笔记生成器</title>
   
 
 
@@ -156,7 +167,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/02/22/powershell%E7%BC%96%E7%A0%81%E8%B8%A9%E5%9D%91/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/10/12/%E7%81%AB%E7%BA%BF%E6%B4%9E%E6%80%81IAST%E7%AE%80%E5%8D%95%E8%AF%95%E7%94%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -169,7 +180,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          powershell编码踩坑
+          火线洞态IAST简单试用
         </h1>
 
         <div class="post-meta">
@@ -180,7 +191,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2021-02-22 10:04:24 / 修改时间：10:22:44" itemprop="dateCreated datePublished" datetime="2021-02-22T10:04:24+08:00">2021-02-22</time>
+              <time title="创建时间：2021-10-12 16:44:17 / 修改时间：16:49:42" itemprop="dateCreated datePublished" datetime="2021-10-12T16:44:17+08:00">2021-10-12</time>
             </span>
 
           
@@ -194,19 +205,39 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>记录一次使用powershell中遇到的小坑。<br>在使用 ysoserial生成测试payload时，本地测试不过，使用最简单的URLDNS探测也报错</p>
-<p><img src="/images/210222/1.png" alt="1"></p>
-<p><img src="/images/210222/2.png" alt="1"></p>
-<p>报错显示无效的流头部，可以发现其头部为FF FE ，而Java 对象序列化后其头部应该是AC ED ，为什么为出现这种情况呢 ，搜一下，是UTF-16的bom头部</p>
-<p><img src="/images/210222/3.png" alt="1"></p>
-<p>文件打开后也显示UTF-16</p>
-<p><img src="/images/210222/4.png" alt="1"></p>
-<p>那么大概原因是找到了，和编码有关，又搜到了一位师傅遇到了相同的情况印证了我的猜想<a href="https://www.cnblogs.com/Primzahl/p/10834207.html" target="_blank" rel="noopener">powershell 中文系统默认UTF-16 (LE) UNICODE编码 使用时需小心</a><br>使用cmd执行相同命令生成的文件头部正常，也可以正常执行</p>
-<p><img src="/images/210222/5.png" alt="1"></p>
-<p>同时师傅的文章中给出了使用powershell的命令 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar ysoserial.jar Groovy1 &quot;powershell.exe -NonI -W Hidden -NoP -Exec Bypass -Enc YwBhAGwAYwA&#x3D;&quot; | Out-File -Encoding default payload3.bin</span><br></pre></td></tr></table></figure>
-
-<p>增加Out-File -Encoding default<br>马克马克</p>
+        <p>试用了洞态的开源IAST，有些坑，记录记录。</p>
+<p>首先在21年中，火线就开源了Java agent探针，可配合在线平台使用，企业也可申请获取源码本地使用，在完全开源后文档存在许多的不一致，导致我看一会楞是没看懂。官方文档中的最佳实践也是那时候的，有些许区别，这里我就记个流水账。</p>
+<p>出于学习平台功能的目的首先推荐直接用官方写好的docker脚本进行安装，简单快捷又傻瓜，GitHub上deploy项目就是，我由于机器端口冲突改了个web端口。</p>
+<p><img src="/images/211012/iast/Image.png" alt=""></p>
+<p>接下来默认密码进入web应用，配置API，注意不要使用回环地址！我第一次使用了回环地址，发生了应用卡死agent生成错误等情况，不信可以看agent生成的命令，看了马上就懂为什么不能用回环地址。</p>
+<p><img src="/images/211012/iast/Image%20%5B1%5D.png" alt=""></p>
+<p>随便创建一个应用，建议用英文名，在插桩时可选择应用名，个人感觉中文名可能会带来编码问题，所以我在启动时没有带应用名参数，参数可以参考官方文档</p>
+<p><img src="/images/211012/iast/Image%20%5B2%5D.png" alt=""></p>
+<p>由于我没有设置项目名称所以我为项目手动设置了探针</p>
+<p><img src="/images/211012/iast/Image%20%5B3%5D.png" alt=""></p>
+<p>接下来从后台下载agent，并验证一下，这里我使用IDEA运行项目，这样比较方便，添加完启动参数后就能在输出中看到相关的信息了</p>
+<p><img src="/images/211012/iast/Image%20%5B4%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B5%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B6%5D.png" alt=""></p>
+<p>运行项目后我们回到管理后台给项目添加这个agent，写了项目名的话就不用配置了，这里推荐写项目名，否则agent的名字会一样，不易于区分</p>
+<p>在引擎管理中我们就能看到这个agent了，项目中SCA功能可以看到相关的组件信息</p>
+<p><img src="/images/211012/iast/Image%20%5B7%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B8%5D.png" alt=""></p>
+<p>为了方便测试，我直接在项目中写了个注入</p>
+<p><img src="/images/211012/iast/Image%20%5B9%5D.png" alt=""></p>
+<p>测试了一下失败了，愣住，又试了几次还是不行，看了下日志个人感觉和一个第三方类覆盖失败有关系，于是我又搞了个demo同样写了个order by 拼接注入，成功检测到了</p>
+<p><img src="/images/211012/iast/Image%20%5B10%5D.png" alt=""></p>
+<p>关于运行时attach，我这报错了，因为我的双Java环境使用的是jre而不是jdk，改成JDK环境就行，注意这种方式目前还不能添加项目名，需要手动给项目配置agent</p>
+<p><img src="/images/211012/iast/Image%20%5B11%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B12%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B13%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B14%5D.png" alt=""></p>
+<p>先记到这儿其他后续再记录</p>
+<p>再记个遇到的问题，打算用webgoat测试一下，但是我下载的8.1.0需要JDK11而OpenJDK11（MacOS）中我没有找到tools.jar，根据代码没有这个jar是无法启动的；在Stack Overflow上看到说9开始这个包就没有了，</p>
+<p><a href="https://stackoverflow.com/questions/53707666/how-to-get-tools-jar-for-openjdk-11-on-windows" target="_blank" rel="noopener">https://stackoverflow.com/questions/53707666/how-to-get-tools-jar-for-openjdk-11-on-windows</a></p>
+<p><img src="/images/211012/iast/Image%20%5B15%5D.png" alt=""></p>
+<p>补充一下，还是启动成功了retransform失败的类有不少，在xml测试报错后agent掉线了</p>
+<p>再就是我测试一个springboot项目遇到retransform netty失败并且过一会agent就下线了，原因未知；</p>
 
     </div>
 
@@ -222,13 +253,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2021/02/07/MinIO%E6%9C%AA%E6%8E%88%E6%9D%83SSRF%E6%BC%8F%E6%B4%9E%EF%BC%88CVE-2021-21287%EF%BC%89%E7%AE%80%E5%8D%95%E5%A4%8D%E7%8E%B0/" rel="prev" title="MinIO未授权SSRF漏洞（CVE-2021-21287）简单复现">
-      <i class="fa fa-chevron-left"></i> MinIO未授权SSRF漏洞（CVE-2021-21287）简单复现
+    <a href="/2021/10/12/Gitlab-CI-CD%E9%9A%8F%E6%89%8B%E8%AE%B0/" rel="prev" title="Gitlab CI/CD随手记">
+      <i class="fa fa-chevron-left"></i> Gitlab CI/CD随手记
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2021/02/23/dubbo%E8%BF%91%E6%9C%9F%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/" rel="next" title="dubbo近期漏洞学习">
-      dubbo近期漏洞学习 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     

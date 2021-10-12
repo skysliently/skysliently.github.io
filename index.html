@@ -145,6 +145,179 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/10/12/%E7%81%AB%E7%BA%BF%E6%B4%9E%E6%80%81IAST%E7%AE%80%E5%8D%95%E8%AF%95%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0xSky">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="自动笔记生成器">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/12/%E7%81%AB%E7%BA%BF%E6%B4%9E%E6%80%81IAST%E7%AE%80%E5%8D%95%E8%AF%95%E7%94%A8/" class="post-title-link" itemprop="url">火线洞态IAST简单试用</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-10-12 16:44:17 / 修改时间：16:49:42" itemprop="dateCreated datePublished" datetime="2021-10-12T16:44:17+08:00">2021-10-12</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>试用了洞态的开源IAST，有些坑，记录记录。</p>
+<p>首先在21年中，火线就开源了Java agent探针，可配合在线平台使用，企业也可申请获取源码本地使用，在完全开源后文档存在许多的不一致，导致我看一会楞是没看懂。官方文档中的最佳实践也是那时候的，有些许区别，这里我就记个流水账。</p>
+<p>出于学习平台功能的目的首先推荐直接用官方写好的docker脚本进行安装，简单快捷又傻瓜，GitHub上deploy项目就是，我由于机器端口冲突改了个web端口。</p>
+<p><img src="/images/211012/iast/Image.png" alt=""></p>
+<p>接下来默认密码进入web应用，配置API，注意不要使用回环地址！我第一次使用了回环地址，发生了应用卡死agent生成错误等情况，不信可以看agent生成的命令，看了马上就懂为什么不能用回环地址。</p>
+<p><img src="/images/211012/iast/Image%20%5B1%5D.png" alt=""></p>
+<p>随便创建一个应用，建议用英文名，在插桩时可选择应用名，个人感觉中文名可能会带来编码问题，所以我在启动时没有带应用名参数，参数可以参考官方文档</p>
+<p><img src="/images/211012/iast/Image%20%5B2%5D.png" alt=""></p>
+<p>由于我没有设置项目名称所以我为项目手动设置了探针</p>
+<p><img src="/images/211012/iast/Image%20%5B3%5D.png" alt=""></p>
+<p>接下来从后台下载agent，并验证一下，这里我使用IDEA运行项目，这样比较方便，添加完启动参数后就能在输出中看到相关的信息了</p>
+<p><img src="/images/211012/iast/Image%20%5B4%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B5%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B6%5D.png" alt=""></p>
+<p>运行项目后我们回到管理后台给项目添加这个agent，写了项目名的话就不用配置了，这里推荐写项目名，否则agent的名字会一样，不易于区分</p>
+<p>在引擎管理中我们就能看到这个agent了，项目中SCA功能可以看到相关的组件信息</p>
+<p><img src="/images/211012/iast/Image%20%5B7%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B8%5D.png" alt=""></p>
+<p>为了方便测试，我直接在项目中写了个注入</p>
+<p><img src="/images/211012/iast/Image%20%5B9%5D.png" alt=""></p>
+<p>测试了一下失败了，愣住，又试了几次还是不行，看了下日志个人感觉和一个第三方类覆盖失败有关系，于是我又搞了个demo同样写了个order by 拼接注入，成功检测到了</p>
+<p><img src="/images/211012/iast/Image%20%5B10%5D.png" alt=""></p>
+<p>关于运行时attach，我这报错了，因为我的双Java环境使用的是jre而不是jdk，改成JDK环境就行，注意这种方式目前还不能添加项目名，需要手动给项目配置agent</p>
+<p><img src="/images/211012/iast/Image%20%5B11%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B12%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B13%5D.png" alt=""></p>
+<p><img src="/images/211012/iast/Image%20%5B14%5D.png" alt=""></p>
+<p>先记到这儿其他后续再记录</p>
+<p>再记个遇到的问题，打算用webgoat测试一下，但是我下载的8.1.0需要JDK11而OpenJDK11（MacOS）中我没有找到tools.jar，根据代码没有这个jar是无法启动的；在Stack Overflow上看到说9开始这个包就没有了，</p>
+<p><a href="https://stackoverflow.com/questions/53707666/how-to-get-tools-jar-for-openjdk-11-on-windows" target="_blank" rel="noopener">https://stackoverflow.com/questions/53707666/how-to-get-tools-jar-for-openjdk-11-on-windows</a></p>
+<p><img src="/images/211012/iast/Image%20%5B15%5D.png" alt=""></p>
+<p>补充一下，还是启动成功了retransform失败的类有不少，在xml测试报错后agent掉线了</p>
+<p>再就是我测试一个springboot项目遇到retransform netty失败并且过一会agent就下线了，原因未知；</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/10/12/Gitlab-CI-CD%E9%9A%8F%E6%89%8B%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0xSky">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="自动笔记生成器">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/12/Gitlab-CI-CD%E9%9A%8F%E6%89%8B%E8%AE%B0/" class="post-title-link" itemprop="url">Gitlab CI/CD随手记</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-10-12 16:38:36 / 修改时间：16:43:12" itemprop="dateCreated datePublished" datetime="2021-10-12T16:38:36+08:00">2021-10-12</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>想用Gitlab 自动触发sonar，这就涉及到Gitlab CI/CD，随手记录一下。</p>
+<p>安装runner</p>
+<p>Gitlab使用runner来运行流水线事务，这种可拓展的事务模式可以让Gitlab不会受其所在服务器资源性能的限制。这里我使用docker安装一个runner，在CI/CD设置中有链接，跟着走就可以，在安装后还有注册过程，注册用到的地址与token在设置页面中有，注意，这样注册以后这个runner是这个project的特有runner，再注意，请仔细阅读文档。</p>
+<p><img src="/images/211012/gitlab_ci_cd/Image.png" alt=""></p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B1%5D.png" alt=""></p>
+<p>在安装、注册完成后，可以设置一下允许运行没有标签的job，或者在编写事务时要使用runner设置的tag，lock to current project也可以去掉，这样这个runner就可以被其他project使用了</p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B2%5D.png" alt=""></p>
+<p>根据sonar文档，在项目中要设置变量记录sonar的token与地址，设置位于settings-CI/CD-variables，可参考<a href="https://docs.sonarqube.org/8.5/analysis/gitlab-cicd/" target="_blank" rel="noopener">sonar doc</a> 我参考的是8.5的doc可以根据版本需要参考对应doc</p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B3%5D.png" alt=""></p>
+<p>后续直接在sonar抄一个.gitlab-ci.yml就可以咯，我们也可以设置更多脚本比如运行py脚本等来丰富任务。这里要注意社区版的Gitlab只能支持一个分支的事务可以新建也可以在主分支上执行事务，而且创建者必须是project的所有者。等事务运行完成我们就可以在sonar上查看了，注意要运行自定义规则需要在项目第一次运行后在sonar上进行设置，目前我没有找到可以初次运行指定规则的方法。</p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B4%5D.png" alt=""></p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B5%5D.png" alt=""></p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B6%5D.png" alt=""></p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B7%5D.png" alt=""></p>
+<p>maven遇到的问题</p>
+<p>因为sonar扫描maven项目时需要用maven进行编译，所以脚本中指定了一个maven镜像可以根据需要在docker hub中选择，配置文件中是默认的镜像在脚本中可以进行复写，但是有些依赖是在私有环境中才有的，那就需要修改settings.xml文件。这里可以修改config.toml，我将settings上传到docker的宿主机（注意，是docker宿主机，因为我在安装runner时使用的是docker volume 挂载了一个空间到容器中，所以这里/workspace对应docker宿主机的空间，/root/workspace代表脚本中拉取maven镜像的空间，详情见<a href="https://docs.gitlab.com/runner/install/docker.html#option-2-use-docker-volumes-to-start-the-runner-container）中的workspace文件夹下，并进行设置。" target="_blank" rel="noopener">https://docs.gitlab.com/runner/install/docker.html#option-2-use-docker-volumes-to-start-the-runner-container）中的workspace文件夹下，并进行设置。</a></p>
+<p><img src="/images/211012/gitlab_ci_cd/Image%20%5B8%5D.png" alt=""></p>
+<p>然后重启容器使配置生效，在事务上加上指定settings文件，运行job即可。</p>
+<p>参考：</p>
+<p><a href="https://www.cnblogs.com/kanyun/p/14700624.html" target="_blank" rel="noopener">https://www.cnblogs.com/kanyun/p/14700624.html</a></p>
+<p><a href="https://docs.gitlab.com/runner/install/docker.html" target="_blank" rel="noopener">https://docs.gitlab.com/runner/install/docker.html</a></p>
+<p><a href="https://docs.gitlab.com/runner/register/index.html#docker" target="_blank" rel="noopener">https://docs.gitlab.com/runner/register/index.html#docker</a></p>
+<p><a href="https://docs.sonarqube.org/8.5/analysis/gitlab-cicd/" target="_blank" rel="noopener">https://docs.sonarqube.org/8.5/analysis/gitlab-cicd/</a></p>
+<p><a href="https://docs.sonarqube.org/latest/analysis/gitlab-integration/" target="_blank" rel="noopener">https://docs.sonarqube.org/latest/analysis/gitlab-integration/</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/09/18/%E8%BF%9C%E7%A8%8B%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8C%97/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1069,156 +1242,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/02/07/MinIO%E6%9C%AA%E6%8E%88%E6%9D%83SSRF%E6%BC%8F%E6%B4%9E%EF%BC%88CVE-2021-21287%EF%BC%89%E7%AE%80%E5%8D%95%E5%A4%8D%E7%8E%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="0xSky">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="自动笔记生成器">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/02/07/MinIO%E6%9C%AA%E6%8E%88%E6%9D%83SSRF%E6%BC%8F%E6%B4%9E%EF%BC%88CVE-2021-21287%EF%BC%89%E7%AE%80%E5%8D%95%E5%A4%8D%E7%8E%B0/" class="post-title-link" itemprop="url">MinIO未授权SSRF漏洞（CVE-2021-21287）简单复现</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2021-02-07 14:36:45 / 修改时间：15:22:41" itemprop="dateCreated datePublished" datetime="2021-02-07T14:36:45+08:00">2021-02-07</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>跟着师傅复现一下p师傅最近发现的洞（p师傅开始审计go了吗？小声逼逼）。打开安装了docker的虚拟机（CentOS 7），用修改docker.service的方法启动docker API。看看文件在哪</p>
-<p><img src="/images/MinIO/1.png" alt=""></p>
-<p>修改一下原有配置</p>
-<p><img src="/images/MinIO/2.png" alt=""></p>
-<p>systemctl daemon-reload 重载，然后启动，再看看端口就能看到API启动了</p>
-<p><img src="/images/MinIO/3.png" alt=""></p>
-<p>从<a href="https://www.o2oxy.cn/3104.html" target="_blank" rel="noopener">师傅</a>的博客扒一个docker-compose，</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">version: &#39;3.7&#39;</span><br><span class="line">services:</span><br><span class="line">  minio1:</span><br><span class="line">    image: minio&#x2F;minio:RELEASE.2021-01-16T02-19-44Z</span><br><span class="line">    volumes:</span><br><span class="line">      - data1-1:&#x2F;data1</span><br><span class="line">      - data1-2:&#x2F;data2</span><br><span class="line">    ports:</span><br><span class="line">      - &quot;9000:9000&quot;</span><br><span class="line">    environment:</span><br><span class="line">      MINIO_ACCESS_KEY: minio</span><br><span class="line">      MINIO_SECRET_KEY: minio123</span><br><span class="line">    command: server http:&#x2F;&#x2F;minio&#123;1...4&#125;&#x2F;data&#123;1...2&#125;</span><br><span class="line">    healthcheck:</span><br><span class="line">      test: [&quot;CMD&quot;, &quot;curl&quot;, &quot;-f&quot;, &quot;http:&#x2F;&#x2F;localhost:9000&#x2F;minio&#x2F;health&#x2F;live&quot;]</span><br><span class="line">      interval: 30s</span><br><span class="line">      timeout: 20s</span><br><span class="line">      retries: 3</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">## By default this config uses default local driver,</span><br><span class="line">## For custom volumes replace with volume driver configuration.</span><br><span class="line">volumes:</span><br><span class="line">  data1-1:</span><br><span class="line">  data1-2:</span><br></pre></td></tr></table></figure>
-
-<p>跑一下</p>
-<p><img src="/images/MinIO/4.png" alt=""></p>
-<p><img src="/images/MinIO/5.png" alt=""></p>
-<p>测一下p师傅的PoC，kali的nc不知道怎么连不上，用宿主机的凑合一下</p>
-<p><img src="/images/MinIO/6.png" alt=""></p>
-<p>kali重启了下好了，估计的网络出了点小问题，估计虚拟机的双网卡影响，关掉了桥接的虚拟网卡，然后重启解决99%的问题。宿主机：192.168.88.1kali：192.168.88.130CentOS：192.168.88.140</p>
-<p><img src="/images/MinIO/7.png" alt=""></p>
-<p>不过为了偷懒我想直接用p师傅的php跳转，于是就用一下宿主机上的php环境吧。复制一下师傅的PoC修改一下，扔到PHP环境根目录命名为index，dockerfile也c+v美滋滋</p>
-<p><img src="/images/MinIO/8.png" alt=""></p>
-<p><img src="/images/MinIO/9.png" alt=""></p>
-<p><img src="/images/MinIO/10.png" alt=""></p>
-<p>执行失败。。看下日志，timeout了，curl一下也是timeout，大意了咋回事。看了看Apache没开对外访问宿主机的防火墙规则也设置得比较严格，临时关闭一下，再试一下。</p>
-<p><img src="/images/MinIO/11.png" alt=""></p>
-<p>还是不行</p>
-<p><img src="/images/MinIO/12.png" alt=""></p>
-<p>思考了一下，SSRF让docker内的容器发送一个post给指定的URL但是这个URL对于容器来说是没有路由的，随便找个Ubuntu容器进去curl一下的确是这样(然儿其实并不是)</p>
-<p><img src="/images/MinIO/13.png" alt=""></p>
-<p>陷入沉思…，突然想到docker的默认网卡docker0</p>
-<p><img src="/images/MinIO/14.png" alt=""></p>
-<p>改成这个IP</p>
-<p><img src="/images/MinIO/15.png" alt=""></p>
-<p>看来并不是..理论上来说这个就不应该，ping一下，正常，想了一会我防火墙忘记开口子了orz，改加个2375</p>
-<p><img src="/images/MinIO/16.png" alt=""></p>
-<p>反弹shell并未成功，之后再尝试一下顺带说一下由于可控参数是host对于目前大量使用的Nginx代理来说这个洞比较鸡肋了wwwww</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/02/07/%E6%96%B0-Hello-World/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="0xSky">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="自动笔记生成器">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/02/07/%E6%96%B0-Hello-World/" class="post-title-link" itemprop="url">新 Hello World</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2021-02-07 11:40:48 / 修改时间：11:47:09" itemprop="dateCreated datePublished" datetime="2021-02-07T11:40:48+08:00">2021-02-07</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>测试文件</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1288,7 +1311,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-count">13</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
