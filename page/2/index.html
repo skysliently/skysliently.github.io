@@ -145,6 +145,77 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/02/22/powershell%E7%BC%96%E7%A0%81%E8%B8%A9%E5%9D%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0xSky">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="自动笔记生成器">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/02/22/powershell%E7%BC%96%E7%A0%81%E8%B8%A9%E5%9D%91/" class="post-title-link" itemprop="url">powershell编码踩坑</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-02-22 10:04:24 / 修改时间：10:22:44" itemprop="dateCreated datePublished" datetime="2021-02-22T10:04:24+08:00">2021-02-22</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>记录一次使用powershell中遇到的小坑。<br>在使用 ysoserial生成测试payload时，本地测试不过，使用最简单的URLDNS探测也报错</p>
+<p><img src="/images/210222/1.png" alt="1"></p>
+<p><img src="/images/210222/2.png" alt="1"></p>
+<p>报错显示无效的流头部，可以发现其头部为FF FE ，而Java 对象序列化后其头部应该是AC ED ，为什么为出现这种情况呢 ，搜一下，是UTF-16的bom头部</p>
+<p><img src="/images/210222/3.png" alt="1"></p>
+<p>文件打开后也显示UTF-16</p>
+<p><img src="/images/210222/4.png" alt="1"></p>
+<p>那么大概原因是找到了，和编码有关，又搜到了一位师傅遇到了相同的情况印证了我的猜想<a href="https://www.cnblogs.com/Primzahl/p/10834207.html" target="_blank" rel="noopener">powershell 中文系统默认UTF-16 (LE) UNICODE编码 使用时需小心</a><br>使用cmd执行相同命令生成的文件头部正常，也可以正常执行</p>
+<p><img src="/images/210222/5.png" alt="1"></p>
+<p>同时师傅的文章中给出了使用powershell的命令 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar ysoserial.jar Groovy1 &quot;powershell.exe -NonI -W Hidden -NoP -Exec Bypass -Enc YwBhAGwAYwA&#x3D;&quot; | Out-File -Encoding default payload3.bin</span><br></pre></td></tr></table></figure>
+
+<p>增加Out-File -Encoding default<br>马克马克</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/02/07/MinIO%E6%9C%AA%E6%8E%88%E6%9D%83SSRF%E6%BC%8F%E6%B4%9E%EF%BC%88CVE-2021-21287%EF%BC%89%E7%AE%80%E5%8D%95%E5%A4%8D%E7%8E%B0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -430,7 +501,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-count">14</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
