@@ -145,6 +145,104 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/12/10/log4j2%E6%BC%8F%E6%B4%9E%E7%AE%80%E5%8D%95%E5%B0%8F%E8%AE%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0xSky">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="自动笔记生成器">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/12/10/log4j2%E6%BC%8F%E6%B4%9E%E7%AE%80%E5%8D%95%E5%B0%8F%E8%AE%A1/" class="post-title-link" itemprop="url">log4j2漏洞简单小计</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-12-10 18:39:46 / 修改时间：18:55:55" itemprop="dateCreated datePublished" datetime="2021-12-10T18:39:46+08:00">2021-12-10</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>log4j核弹级漏洞最近被公开了，看了下spring默认会引入log4j的依赖包，但是根据网上叙述实际默认使用logback进行日志实现，slf4j进行抽象层管理，所以只看依赖判断是否受影响有些不严谨，这里用测试项目来试一下。</p>
+<p>写一个会将输入写入日志的接口。</p>
+<p><img src="/images/211210/Image%20.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B1%5D.png" alt=""></p>
+<p>访问一下，日志写入。</p>
+<p><img src="/images/211210/Image%20%5B2%5D.png" alt=""></p>
+<p>接下来下断点看是什么日志组件进行了处理，可以看到是logback对日志进行了处理。</p>
+<p><img src="/images/211210/Image%20%5B3%5D.png" alt=""></p>
+<p>所以网上引入依赖就算被影响实际上是不准确的描述，log4j和logback会被spring boot log组件默认引入，但spring默认会使用logback。<br>再补上一个受影响的log4j进行记录，这里就由log4j进行日志处理了。</p>
+<p><img src="/images/211210/Image%20%5B4%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B5%5D.png" alt=""></p>
+<p>只是简单复现问题的话可以使用低版本java环境来测试，我使用JNDI-Injection-Exploit生成POC验证了下没有成功，又尝试用marshalsec生成，也没有成功。<br>简单跟了下代码断点发现我直接使用springboot后只引入了log4j-api组件，实际日志在slf4j抽象后被logback实际输出了，闹了个乌龙。所以先排除原有的spring-boot-starter-logging依赖，测试项目是在spring-boot-starter-web组件的spring-boot-starter依赖组件这种引入了logging，所以要此组件引入处排除spring-boot-starter-logging。<br>之后直接按照IDE的提示引入log4j-api，这时进行测试会报错，提示我们需要引入log4j-core，所以有log4j-api就被影响的说法也是不准确的，必须要有log4j-core因为触发漏洞的代码实际在这个组件包中。</p>
+<p><img src="/images/211210/Image%20%5B6%5D.png" alt=""></p>
+<p>引入包后再执行日志记录动作，触发了ldap查询动作，弹出计算器。</p>
+<p><img src="/images/211210/Image%20%5B7%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B8%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B9%5D.png" alt=""></p>
+<h4 id="具体分析"><a href="#具体分析" class="headerlink" title="具体分析"></a>具体分析</h4><p>按照惯例贴一下调用栈</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">c_lookup:<span class="number">1017</span>, LdapCtx (com.sun.jndi.ldap)</span><br><span class="line">p_lookup:<span class="number">542</span>, ComponentContext (com.sun.jndi.toolkit.ctx)</span><br><span class="line">lookup:<span class="number">177</span>, PartialCompositeContext (com.sun.jndi.toolkit.ctx)</span><br><span class="line">lookup:<span class="number">205</span>, GenericURLContext (com.sun.jndi.toolkit.url)</span><br><span class="line">lookup:<span class="number">94</span>, ldapURLContext (com.sun.jndi.url.ldap)</span><br><span class="line">lookup:<span class="number">417</span>, InitialContext (javax.naming)</span><br><span class="line">lookup:<span class="number">172</span>, JndiManager (org.apache.logging.log4j.core.net)</span><br><span class="line">lookup:<span class="number">56</span>, JndiLookup (org.apache.logging.log4j.core.lookup)</span><br><span class="line">lookup:<span class="number">223</span>, Interpolator (org.apache.logging.log4j.core.lookup)</span><br><span class="line">resolveVariable:<span class="number">1116</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">substitute:<span class="number">1038</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">substitute:<span class="number">912</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">replace:<span class="number">467</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">format:<span class="number">132</span>, MessagePatternConverter (org.apache.logging.log4j.core.pattern)</span><br><span class="line">format:<span class="number">38</span>, PatternFormatter (org.apache.logging.log4j.core.pattern)</span><br><span class="line">toSerializable:<span class="number">345</span>, PatternLayout$PatternSerializer (org.apache.logging.log4j.core.layout)</span><br><span class="line">toText:<span class="number">244</span>, PatternLayout (org.apache.logging.log4j.core.layout)</span><br><span class="line">encode:<span class="number">229</span>, PatternLayout (org.apache.logging.log4j.core.layout)</span><br><span class="line">encode:<span class="number">59</span>, PatternLayout (org.apache.logging.log4j.core.layout)</span><br><span class="line">directEncodeEvent:<span class="number">197</span>, AbstractOutputStreamAppender (org.apache.logging.log4j.core.appender)</span><br><span class="line">tryAppend:<span class="number">190</span>, AbstractOutputStreamAppender (org.apache.logging.log4j.core.appender)</span><br><span class="line">append:<span class="number">181</span>, AbstractOutputStreamAppender (org.apache.logging.log4j.core.appender)</span><br><span class="line">tryCallAppender:<span class="number">156</span>, AppenderControl (org.apache.logging.log4j.core.config)</span><br><span class="line">callAppender0:<span class="number">129</span>, AppenderControl (org.apache.logging.log4j.core.config)</span><br><span class="line">callAppenderPreventRecursion:<span class="number">120</span>, AppenderControl (org.apache.logging.log4j.core.config)</span><br><span class="line">callAppender:<span class="number">84</span>, AppenderControl (org.apache.logging.log4j.core.config)</span><br><span class="line">callAppenders:<span class="number">543</span>, LoggerConfig (org.apache.logging.log4j.core.config)</span><br><span class="line">processLogEvent:<span class="number">502</span>, LoggerConfig (org.apache.logging.log4j.core.config)</span><br><span class="line">log:<span class="number">485</span>, LoggerConfig (org.apache.logging.log4j.core.config)</span><br><span class="line">log:<span class="number">460</span>, LoggerConfig (org.apache.logging.log4j.core.config)</span><br><span class="line">log:<span class="number">82</span>, AwaitCompletionReliabilityStrategy (org.apache.logging.log4j.core.config)</span><br><span class="line">log:<span class="number">161</span>, Logger (org.apache.logging.log4j.core)</span><br><span class="line">tryLogMessage:<span class="number">2198</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">logMessageTrackRecursion:<span class="number">2152</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">logMessageSafely:<span class="number">2135</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">logMessage:<span class="number">2011</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">logIfEnabled:<span class="number">1983</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">error:<span class="number">740</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">logTest:<span class="number">13</span>, LogTest (com.examplespring.demo.controller)</span><br><span class="line">LogTest:<span class="number">14</span>, TestController (com.examplespring.demo.controller)</span><br></pre></td></tr></table></figure>
+
+<p>在调用栈里我们可以看到关键的几个动作：<br>lookup:172, JndiManager (<a href="http://org.apache.logging.log4j.core.net/" target="_blank" rel="noopener">org.apache.logging.log4j.core.net</a>)lookup:56, JndiLookup (org.apache.logging.log4j.core.lookup)lookup:223, Interpolator (org.apache.logging.log4j.core.lookup)resolveVariable:1116, StrSubstitutor (org.apache.logging.log4j.core.lookup)substitute:1038, StrSubstitutor (org.apache.logging.log4j.core.lookup)substitute:912, StrSubstitutor (org.apache.logging.log4j.core.lookup)replace:467, StrSubstitutor (org.apache.logging.log4j.core.lookup)format:132, MessagePatternConverter (org.apache.logging.log4j.core.pattern)format:38, PatternFormatter (org.apache.logging.log4j.core.pattern)<br>这几个动作都在log4j-core组件包中，也印证了前面说的有log4j-api就有问题，实际上修复漏洞首要需要关注log4j-core包。</p>
+<p>从toText这个函数开始跟进，这里开始转化event内容进行输出。</p>
+<p><img src="/images/211210/Image%20%5B10%5D.png" alt=""></p>
+<p> toSerializable函数遍历使用PatternFormatter对event进行格式化。</p>
+<p><img src="/images/211210/Image%20%5B11%5D.png" alt=""></p>
+<p>在第15个PatternFormatter——MessagePatternConverter进行操作时，event中如果有${就会进行替换。</p>
+<p><img src="/images/211210/Image%20%5B12%5D.png" alt=""></p>
+<p>这里打个岔，可以看到进入替换逻辑有noLookups为false的前提，所以这里就有了临时修复方案将这个变量设置为true，而这个变量就是<em>FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS</em>常量，来源于从配置中查找log4j2.formatMsgNoLookups的值，默认为false。</p>
+<p><img src="/images/211210/Image%20%5B13%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B14%5D.png" alt=""></p>
+<p>言归正传，后续调用substitute递归解析文本中的变量值，注释中也有说明。</p>
+<p><img src="/images/211210/Image%20%5B15%5D.png" alt=""></p>
+<p>resolveVariable进行具体的变量解析，后续就是lookup调用，最终调用java的lookup，所以也受java环境限制。</p>
+<p><img src="/images/211210/Image%20%5B16%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B17%5D.png" alt=""></p>
+<p>在高版本的java环境中可以参考采用tomcat-embed执行代码，是比较容易利用的。</p>
+<h4 id="临时修补措施"><a href="#临时修补措施" class="headerlink" title="临时修补措施"></a>临时修补措施</h4><p>根据前文内容我们可以简单得出一些临时解决方式，当然这是牺牲了原本的功能</p>
+<p>设置 jvm 启动参数 “-Dlog4j2.formatMsgNoLookups=true”（先升级到2.10+）<br>在添加额外的log4j2.component.properties配置文件，增加“log4j2.formatMsgNoLookups=True”配置（同上）<br>高版本的java环境也能增加利用难度</p>
+<p>使用临时方案后可以在应用启动后打印org.apache.logging.log4j.core.util.Constants.<em>FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS</em>参数，是true就关闭了lookup功能。<br>顺便吐槽一下网上的修复方案一开始都没说到底在哪里加“log4j2.formatMsgNoLookups=True”配置，我设置了application.properties和log4j2.properties都没有效果，最后在代码里面找到是log4j2.component.properties配置文件在启动时会被读取。</p>
+<p><img src="/images/211210/Image%20%5B18%5D.png" alt=""></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/12/03/sonar%E8%87%AA%E5%AE%9A%E4%B9%89%E8%A7%84%E5%88%99%E5%85%A5%E9%97%A8%E9%9A%8F%E8%AE%B0-XML/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1029,145 +1127,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/03/03/dubbo%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0-%E7%BB%AD/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="0xSky">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="自动笔记生成器">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/03/03/dubbo%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0-%E7%BB%AD/" class="post-title-link" itemprop="url">dubbo漏洞学习-续</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2021-03-03 10:00:15 / 修改时间：16:58:27" itemprop="dateCreated datePublished" datetime="2021-03-03T10:00:15+08:00">2021-03-03</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>此次来尝试一下能不能摆脱之前Rome这个鸡肋的gadget，之前说过SpringAbstractBeanFactoryPointcutAdvisor也被提到可以利用，在<a href="https://github.com/threedr3am/dubbo-exp" target="_blank" rel="noopener">dubbo-exp</a>项目中有此种利用链，尝试一下。</p>
-<h3 id="SpringAbstractBeanFactoryPointcutAdvisor触发尝试"><a href="#SpringAbstractBeanFactoryPointcutAdvisor触发尝试" class="headerlink" title="SpringAbstractBeanFactoryPointcutAdvisor触发尝试"></a>SpringAbstractBeanFactoryPointcutAdvisor触发尝试</h3><h4 id="旧版Spring实验"><a href="#旧版Spring实验" class="headerlink" title="旧版Spring实验"></a>旧版Spring实验</h4><p>由于项目中的spring依赖比较旧，先尝试一下旧版的dubbo  demo 0.1.0版本，查看一下依赖，这里我们选择了与exp项目依赖版本相近的springboot（spring），写好参数，运行成功弹出计算器。<br>此处dubbo演示demo的springboot依赖版本为1.3.0.RELEASE，其使用的spring版本为4.2.3.RELEASE</p>
-<p><img src="/images/210302/Image.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B1%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B2%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B3%5D.png" alt=""></p>
-<p>错误堆栈</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.beans.factory.BeanDefinitionStoreException: Invalid bean definition with name <span class="string">'ldap://127.0.0.1:1389/bxztsy'</span> defined in JNDI environment: JNDI lookup failed; nested exception is javax.naming.NamingException: problem generating object using object factory [Root exception is java.lang.ClassCastException: ExecTemplateJDK8 cannot be cast to javax.naming.spi.ObjectFactory]; remaining name <span class="string">'bxztsy'</span></span><br><span class="line">    at org.springframework.jndi.support.SimpleJndiBeanFactory.getBean(SimpleJndiBeanFactory.java:<span class="number">125</span>) ~[spring-context-<span class="number">4.2</span><span class="number">.3</span>.RELEASE.jar:<span class="number">4.2</span><span class="number">.3</span>.RELEASE]</span><br><span class="line">    at org.springframework.aop.support.AbstractBeanFactoryPointcutAdvisor.getAdvice(AbstractBeanFactoryPointcutAdvisor.java:<span class="number">88</span>) ~[spring-aop-<span class="number">4.2</span><span class="number">.3</span>.RELEASE.jar:<span class="number">4.2</span><span class="number">.3</span>.RELEASE]</span><br><span class="line">    at org.springframework.aop.support.AbstractPointcutAdvisor.equals(AbstractPointcutAdvisor.java:<span class="number">74</span>) ~[spring-aop-<span class="number">4.2</span><span class="number">.3</span>.RELEASE.jar:<span class="number">4.2</span><span class="number">.3</span>.RELEASE]</span><br><span class="line">    at java.util.HashMap.putVal(HashMap.java:<span class="number">634</span>) ~[na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at java.util.HashMap.put(HashMap.java:<span class="number">611</span>) ~[na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at com.alibaba.com.caucho.hessian.io.MapDeserializer.doReadMap(MapDeserializer.java:<span class="number">144</span>) ~[dubbo-<span class="number">2.5</span><span class="number">.10</span>.jar:<span class="number">2.0</span><span class="number">.1</span>]</span><br><span class="line">    at com.alibaba.com.caucho.hessian.io.MapDeserializer.readMap(MapDeserializer.java:<span class="number">125</span>) ~[dubbo-<span class="number">2.5</span><span class="number">.10</span>.jar:<span class="number">2.0</span><span class="number">.1</span>]</span><br><span class="line">    at com.alibaba.com.caucho.hessian.io.Hessian2Input.readObject(Hessian2Input.java:<span class="number">2691</span>) ~[dubbo-<span class="number">2.5</span><span class="number">.10</span>.jar:<span class="number">2.0</span><span class="number">.1</span>]</span><br><span class="line">    at com.alibaba.com.caucho.hessian.io.Hessian2Input.readObject(Hessian2Input.java:<span class="number">2260</span>) ~[dubbo-<span class="number">2.5</span><span class="number">.10</span>.jar:<span class="number">2.0</span><span class="number">.1</span>]</span><br><span class="line">    at com.alibaba.dubbo.common.serialize.support.hessian.Hessian2ObjectInput.readObject(Hessian2ObjectInput.java:<span class="number">74</span>) ~[dubbo-<span class="number">2.5</span><span class="number">.10</span>.jar:<span class="number">2.0</span><span class="number">.1</span>]</span><br><span class="line">    at com.alibaba.dubbo.remoting.exchange.codec.ExchangeCodec.decodeHeartbeatData(ExchangeCodec.java:<span class="number">395</span>) [dubbo-<span class="number">2.5</span><span class="number">.10</span>.jar:<span class="number">2.0</span><span class="number">.1</span>]</span><br><span class="line">    at com.alibaba.dubbo.rpc.protocol.dubbo.DubboCodec.decodeBody(DubboCodec.java:<span class="number">119</span>) ~[dubbo-<span class="number">2.5</span><span class="number">.10</span>.jar:<span class="number">2.0</span><span class="number">.1</span>]</span><br><span class="line">    at com.alibaba.dubbo.remoting.exchange.codec.ExchangeCodec.decode(ExchangeCodec.java:<span class="number">120</span>) [dubbo-<span class="number">2.5</span><span class="number">.10</span>.jar:<span class="number">2.0</span><span class="number">.1</span>]</span><br><span class="line">    at com.alibaba.dubbo.remoting.exchange.codec.ExchangeCodec.decode(ExchangeCodec.java:<span class="number">81</span>) [dubbo-<span class="number">2.5</span><span class="number">.10</span>.jar:<span class="number">2.0</span><span class="number">.1</span>]</span><br><span class="line">    at com.alibaba.dubbo.rpc.protocol.dubbo.DubboCountCodec.decode(DubboCountCodec.java:<span class="number">44</span>) [dubbo-<span class="number">2.5</span><span class="number">.10</span>.jar:<span class="number">2.0</span><span class="number">.1</span>]</span><br><span class="line">    at com.alibaba.dubbo.remoting.transport.netty.NettyCodecAdapter$InternalDecoder.messageReceived(NettyCodecAdapter.java:<span class="number">133</span>) [dubbo-<span class="number">2.5</span><span class="number">.10</span>.jar:<span class="number">2.0</span><span class="number">.1</span>]</span><br><span class="line">    at org.jboss.netty.channel.SimpleChannelUpstreamHandler.handleUpstream(SimpleChannelUpstreamHandler.java:<span class="number">80</span>) [netty-<span class="number">3.2</span><span class="number">.5</span>.Final.jar:na]</span><br><span class="line">    at org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:<span class="number">564</span>) [netty-<span class="number">3.2</span><span class="number">.5</span>.Final.jar:na]</span><br><span class="line">    at org.jboss.netty.channel.DefaultChannelPipeline.sendUpstream(DefaultChannelPipeline.java:<span class="number">559</span>) [netty-<span class="number">3.2</span><span class="number">.5</span>.Final.jar:na]</span><br><span class="line">    at org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:<span class="number">274</span>) [netty-<span class="number">3.2</span><span class="number">.5</span>.Final.jar:na]</span><br><span class="line">    at org.jboss.netty.channel.Channels.fireMessageReceived(Channels.java:<span class="number">261</span>) [netty-<span class="number">3.2</span><span class="number">.5</span>.Final.jar:na]</span><br><span class="line">    at org.jboss.netty.channel.socket.nio.NioWorker.read(NioWorker.java:<span class="number">349</span>) [netty-<span class="number">3.2</span><span class="number">.5</span>.Final.jar:na]</span><br><span class="line">    at org.jboss.netty.channel.socket.nio.NioWorker.processSelectedKeys(NioWorker.java:<span class="number">280</span>) [netty-<span class="number">3.2</span><span class="number">.5</span>.Final.jar:na]</span><br><span class="line">    at org.jboss.netty.channel.socket.nio.NioWorker.run(NioWorker.java:<span class="number">200</span>) [netty-<span class="number">3.2</span><span class="number">.5</span>.Final.jar:na]</span><br><span class="line">    at org.jboss.netty.util.ThreadRenamingRunnable.run(ThreadRenamingRunnable.java:<span class="number">108</span>) [netty-<span class="number">3.2</span><span class="number">.5</span>.Final.jar:na]</span><br><span class="line">    at org.jboss.netty.util.internal.DeadLockProofWorker$<span class="number">1</span>.run(DeadLockProofWorker.java:<span class="number">44</span>) [netty-<span class="number">3.2</span><span class="number">.5</span>.Final.jar:na]</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:<span class="number">1142</span>) [na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:<span class="number">617</span>) [na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at java.lang.Thread.run(Thread.java:<span class="number">748</span>) [na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">Caused by: javax.naming.NamingException: problem generating object using object factory</span><br><span class="line">    at com.sun.jndi.ldap.LdapCtx.c_lookup(LdapCtx.java:<span class="number">1092</span>) ~[na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at com.sun.jndi.toolkit.ctx.ComponentContext.p_lookup(ComponentContext.java:<span class="number">542</span>) ~[na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at com.sun.jndi.toolkit.ctx.PartialCompositeContext.lookup(PartialCompositeContext.java:<span class="number">177</span>) ~[na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at com.sun.jndi.toolkit.url.GenericURLContext.lookup(GenericURLContext.java:<span class="number">205</span>) ~[na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at com.sun.jndi.url.ldap.ldapURLContext.lookup(ldapURLContext.java:<span class="number">94</span>) ~[na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at javax.naming.InitialContext.lookup(InitialContext.java:<span class="number">417</span>) ~[na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at org.springframework.jndi.JndiTemplate$<span class="number">1</span>.doInContext(JndiTemplate.java:<span class="number">155</span>) ~[spring-context-<span class="number">4.2</span><span class="number">.3</span>.RELEASE.jar:<span class="number">4.2</span><span class="number">.3</span>.RELEASE]</span><br><span class="line">    at org.springframework.jndi.JndiTemplate.execute(JndiTemplate.java:<span class="number">87</span>) ~[spring-context-<span class="number">4.2</span><span class="number">.3</span>.RELEASE.jar:<span class="number">4.2</span><span class="number">.3</span>.RELEASE]</span><br><span class="line">    at org.springframework.jndi.JndiTemplate.lookup(JndiTemplate.java:<span class="number">152</span>) ~[spring-context-<span class="number">4.2</span><span class="number">.3</span>.RELEASE.jar:<span class="number">4.2</span><span class="number">.3</span>.RELEASE]</span><br><span class="line">    at org.springframework.jndi.JndiTemplate.lookup(JndiTemplate.java:<span class="number">179</span>) ~[spring-context-<span class="number">4.2</span><span class="number">.3</span>.RELEASE.jar:<span class="number">4.2</span><span class="number">.3</span>.RELEASE]</span><br><span class="line">    at org.springframework.jndi.JndiLocatorSupport.lookup(JndiLocatorSupport.java:<span class="number">95</span>) ~[spring-context-<span class="number">4.2</span><span class="number">.3</span>.RELEASE.jar:<span class="number">4.2</span><span class="number">.3</span>.RELEASE]</span><br><span class="line">    at org.springframework.jndi.support.SimpleJndiBeanFactory.doGetSingleton(SimpleJndiBeanFactory.java:<span class="number">218</span>) ~[spring-context-<span class="number">4.2</span><span class="number">.3</span>.RELEASE.jar:<span class="number">4.2</span><span class="number">.3</span>.RELEASE]</span><br><span class="line">    at org.springframework.jndi.support.SimpleJndiBeanFactory.getBean(SimpleJndiBeanFactory.java:<span class="number">112</span>) ~[spring-context-<span class="number">4.2</span><span class="number">.3</span>.RELEASE.jar:<span class="number">4.2</span><span class="number">.3</span>.RELEASE]</span><br><span class="line">    ... <span class="number">28</span> common frames omitted</span><br><span class="line">Caused by: java.lang.ClassCastException: ExecTemplateJDK8 cannot be cast to javax.naming.spi.ObjectFactory</span><br><span class="line">    at javax.naming.spi.NamingManager.getObjectFactoryFromReference(NamingManager.java:<span class="number">163</span>) ~[na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at javax.naming.spi.DirectoryManager.getObjectInstance(DirectoryManager.java:<span class="number">189</span>) ~[na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    at com.sun.jndi.ldap.LdapCtx.c_lookup(LdapCtx.java:<span class="number">1085</span>) ~[na:<span class="number">1.8</span><span class="number">.0_131</span>]</span><br><span class="line">    ... <span class="number">40</span> common frames omitted</span><br></pre></td></tr></table></figure>
-
-
-<p>调用栈</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">lookup:<span class="number">202</span>, GenericURLContext (com.sun.jndi.toolkit.url)</span><br><span class="line">lookup:<span class="number">94</span>, ldapURLContext (com.sun.jndi.url.ldap)</span><br><span class="line">lookup:<span class="number">417</span>, InitialContext (javax.naming)</span><br><span class="line">doInContext:<span class="number">155</span>, JndiTemplate$<span class="number">1</span> (org.springframework.jndi)</span><br><span class="line">execute:<span class="number">87</span>, JndiTemplate (org.springframework.jndi)</span><br><span class="line">lookup:<span class="number">152</span>, JndiTemplate (org.springframework.jndi)</span><br><span class="line">lookup:<span class="number">179</span>, JndiTemplate (org.springframework.jndi)</span><br><span class="line">lookup:<span class="number">95</span>, JndiLocatorSupport (org.springframework.jndi)</span><br><span class="line">doGetSingleton:<span class="number">218</span>, SimpleJndiBeanFactory (org.springframework.jndi.support)</span><br><span class="line">getBean:<span class="number">112</span>, SimpleJndiBeanFactory (org.springframework.jndi.support)</span><br><span class="line">getAdvice:<span class="number">88</span>, AbstractBeanFactoryPointcutAdvisor (org.springframework.aop.support)</span><br><span class="line">equals:<span class="number">74</span>, AbstractPointcutAdvisor (org.springframework.aop.support)</span><br><span class="line">putVal:<span class="number">634</span>, HashMap (java.util)</span><br><span class="line">put:<span class="number">611</span>, HashMap (java.util)</span><br><span class="line">doReadMap:<span class="number">144</span>, MapDeserializer (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readMap:<span class="number">125</span>, MapDeserializer (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readObject:<span class="number">2691</span>, Hessian2Input (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readObject:<span class="number">2260</span>, Hessian2Input (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readObject:<span class="number">74</span>, Hessian2ObjectInput (com.alibaba.dubbo.common.serialize.support.hessian)</span><br><span class="line">decodeHeartbeatData:<span class="number">395</span>, ExchangeCodec (com.alibaba.dubbo.remoting.exchange.codec)</span><br><span class="line">decodeBody:<span class="number">119</span>, DubboCodec (com.alibaba.dubbo.rpc.protocol.dubbo)</span><br><span class="line">decode:<span class="number">120</span>, ExchangeCodec (com.alibaba.dubbo.remoting.exchange.codec)</span><br><span class="line">decode:<span class="number">81</span>, ExchangeCodec (com.alibaba.dubbo.remoting.exchange.codec)</span><br><span class="line">decode:<span class="number">44</span>, DubboCountCodec (com.alibaba.dubbo.rpc.protocol.dubbo)</span><br><span class="line">messageReceived:<span class="number">133</span>, NettyCodecAdapter$InternalDecoder (com.alibaba.dubbo.remoting.transport.netty)</span><br><span class="line">handleUpstream:<span class="number">80</span>, SimpleChannelUpstreamHandler (org.jboss.netty.channel)</span><br><span class="line">sendUpstream:<span class="number">564</span>, DefaultChannelPipeline (org.jboss.netty.channel)</span><br><span class="line">sendUpstream:<span class="number">559</span>, DefaultChannelPipeline (org.jboss.netty.channel)</span><br><span class="line">fireMessageReceived:<span class="number">274</span>, Channels (org.jboss.netty.channel)</span><br><span class="line">fireMessageReceived:<span class="number">261</span>, Channels (org.jboss.netty.channel)</span><br><span class="line">read:<span class="number">349</span>, NioWorker (org.jboss.netty.channel.socket.nio)</span><br><span class="line">processSelectedKeys:<span class="number">280</span>, NioWorker (org.jboss.netty.channel.socket.nio)</span><br><span class="line">run:<span class="number">200</span>, NioWorker (org.jboss.netty.channel.socket.nio)</span><br><span class="line">run:<span class="number">108</span>, ThreadRenamingRunnable (org.jboss.netty.util)</span><br><span class="line">run:<span class="number">44</span>, DeadLockProofWorker$<span class="number">1</span> (org.jboss.netty.util.internal)</span><br><span class="line">runWorker:<span class="number">1142</span>, ThreadPoolExecutor (java.util.concurrent)</span><br><span class="line">run:<span class="number">617</span>, ThreadPoolExecutor$Worker (java.util.concurrent)</span><br><span class="line">run:<span class="number">748</span>, Thread (java.lang)</span><br></pre></td></tr></table></figure>
-
-<h4 id="其他版本实验"><a href="#其他版本实验" class="headerlink" title="其他版本实验"></a>其他版本实验</h4><p>springboot 1.5.18RELEASE，spring 4.3.21RELEASE正常触发（dubbo  demo 0.1.2）</p>
-<p><img src="/images/210302/Image%20%5B4%5D.png" alt=""></p>
-<p>springboot 2.1.2.RELEASE，spring 5.1.4.RELEASE正常触发（dubbo  demo 2.7.0）</p>
-<p><img src="/images/210302/Image%20%5B5%5D.png" alt=""></p>
-<p>springboot 2.3.1.RELEASE，5.2.7.RELEASE正常触发</p>
-<p><img src="/images/210302/Image%20%5B6%5D.png" alt=""></p>
-<p>springboot 2.3.9.RELEASE，5.2.13.RELEASE正常触发，这是测试时最新的发行版</p>
-<p><img src="/images/210302/Image%20%5B7%5D.png" alt=""></p>
-<h4 id="尝试分析流程"><a href="#尝试分析流程" class="headerlink" title="尝试分析流程"></a>尝试分析流程</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">decodeBody:<span class="number">119</span>, DubboCodec (com.alibaba.dubbo.rpc.protocol.dubbo)</span><br><span class="line">decode:<span class="number">120</span>, ExchangeCodec (com.alibaba.dubbo.remoting.exchange.codec)</span><br><span class="line">decode:<span class="number">81</span>, ExchangeCodec (com.alibaba.dubbo.remoting.exchange.codec)</span><br></pre></td></tr></table></figure>
-
-
-<p>这三步调用和之前的反序列化是相同，都是对输入的数据流进行解码，的我们在链上设置好断点，跟进调试</p>
-<p><img src="/images/210302/Image%20%5B8%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B9%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B10%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B11%5D.png" alt=""></p>
-<p>decode过程的前几步调用和之前使用Rome依赖是一样的都是解码数据流的调用，在docodeBody函数中流程与之前有所变化，由于req的属性与之前不同进入的条件分支改变了，触发了decodeHeartbeatData方法</p>
-<p><img src="/images/210302/Image%20%5B12%5D.png" alt=""></p>
-<p>在decodeHeartbeatData方法中调用了ObjectInput的readObject方法，此处就和Rome依赖中触发重写的readObject一样了</p>
-<p><img src="/images/210302/Image%20%5B13%5D.png" alt=""></p>
-<p>经过与前文一样的readObject调用链，触发HashMap的put方法</p>
-<p><img src="/images/210302/Image%20%5B14%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B15%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B16%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B17%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B18%5D.png" alt=""></p>
-<p>此处put调用putVal</p>
-<p><img src="/images/210302/Image%20%5B19%5D.png" alt=""></p>
-<p>在putVal中调用了key的readObject，key就是我们所使用的gadget，DefaultBeanFactoryPointcutAdvisor，集成自AbstractBeanFactoryPointcutAdvisor，AbstractBeanFactoryPointcutAdvisor集成自AbstractPointcutAdvisor</p>
-<p><img src="/images/210302/Image%20%5B20%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B21%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B22%5D.png" alt=""></p>
-<p>AbstractPointcutAdvisor重写了equals方法</p>
-<p><img src="/images/210302/Image%20%5B23%5D.png" alt=""></p>
-<p>而AbstractBeanFactoryPointcutAdvisor又重写了getAdvice方法</p>
-<p><img src="/images/210302/Image%20%5B24%5D.png" alt=""></p>
-<p>之后从调用getBean开始就是spring的jndi流程了</p>
-<p><img src="/images/210302/Image%20%5B25%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B26%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B27%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B28%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B29%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B30%5D.png" alt=""></p>
-<p>注意此处是一个匿名内部类实现doInContext</p>
-<p><img src="/images/210302/Image%20%5B31%5D.png" alt=""></p>
-<p>这里就触发了一个标准的Java JNDI注入了，InitialContext.lookup，参数可控<br>这个触发点和16年的Spring-framework-deserialization-RCE是一样的位置，根据当时相关文章的描述Spring官方将这个锅丢给了中间件反序列接口的防范上或者可以进行反序列的方法上，也就是之后Java版本对JNDI的修复。<br>刚刚也提到了JNDI注入Java在迭代时对远程codebase进行了限制不能加载任意远程codebase，更换1.8.0_251，JNDI注入失败</p>
-<p><img src="/images/210302/Image%20%5B32%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B33%5D.png" alt=""></p>
-<p>所以这里我们使用 如何绕过高版本JDK的限制进行JNDI注入利用 <a href="https://kingx.me/Restrictions-and-Bypass-of-JNDI-Manipulations-RCE.html" target="_blank" rel="noopener">https://kingx.me/Restrictions-and-Bypass-of-JNDI-Manipulations-RCE.html</a> 一文中的思路使用LDAP触发其他gadget，这里我们借用雨了个雨师傅的LDAP server <a href="http://www.yulegeyu.com/2018/12/04/JNDI-Injection-Via-LDAP-Deserialize/" target="_blank" rel="noopener">http://www.yulegeyu.com/2018/12/04/JNDI-Injection-Via-LDAP-Deserialize/</a> 写入序列化数据，启动并监听，这里使用的是ysoserial  CommenCollections6 payload所以在dubbo演示中加上依赖，再使用之前的POC打一下</p>
-<p><img src="/images/210302/Image%20%5B34%5D.png" alt=""></p>
-<h3 id="利用学习"><a href="#利用学习" class="headerlink" title="利用学习"></a>利用学习</h3><p>看一下师傅是如何生成序列化POC的，dubbo-exp项目不多赘述，我们主要是学习师傅如何构造payload，跟入代码</p>
-<p><img src="/images/210302/Image%20%5B35%5D.png" alt=""></p>
-<p>包装输出流，写对象</p>
-<p><img src="/images/210302/Image%20%5B36%5D.png" alt=""></p>
-<p>获取序列化对象</p>
-<p><img src="/images/210302/Image%20%5B37%5D.png" alt=""></p>
-<p>新建一个BeanFactory装入JndiTemplate对象，也就是触发JNDI的对象</p>
-<p><img src="/images/210302/Image%20%5B38%5D.png" alt=""></p>
-<p>创建触发链路中的DefaultBeanFactoryPointcutAdvisor，并将其填入HashMap中</p>
-<p><img src="/images/210302/Image%20%5B39%5D.png" alt=""></p>
-<p><img src="/images/210302/Image%20%5B40%5D.png" alt=""></p>
-<p>之后将对象写入输出流中进行序列化，最后调用发送模块发送数据包完成一次攻击</p>
-<p><img src="/images/210302/Image%20%5B41%5D.png" alt=""></p>
-<p>工具中还有其他利用的方式这边就不多赘述了</p>
-<h3 id="简单总结"><a href="#简单总结" class="headerlink" title="简单总结"></a>简单总结</h3><p>简单总结下对dubbo CVE-2020-1948的利用<br>受影响版本；<br>SpringAbstractBeanFactoryPointcutAdvisor（spring-aop）非常常见易满足；<br>低版本Java（8_121以下）可直接RMI，中间版本（8_121-8_191前）可使用JNDI注入任意命令，高版本（8_191）可在JNDI中注入序列化数据触发已有的gadget反序列化；<br>可见Java8_191前的版本非常易受攻击，利用基本不受限。</p>
-<p>还有使用 org.apache.naming.factory.BeanFactory（Tomcat会依赖），作为第二层gadget绕过JNDI限制，之后会尝试学习，并看看这只方式的利用范围是不是更广。后面还会再学习RMI，JNDI，JRMP相关知识，并学习师傅们的反序列化利用思路。</p>
-<hr>
-<p>参考链接<br><a href="https://threedr3am.github.io/2020/02/14/dubbo%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90-%E9%BB%98%E8%AE%A4dubbo%E5%8D%8F%E8%AE%AE%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%88%A9%E7%94%A8%E4%B9%8Bhessian2/" target="_blank" rel="noopener">https://threedr3am.github.io/2020/02/14/dubbo%E6%BA%90%E7%A0%81%E6%B5%85%E6%9E%90-%E9%BB%98%E8%AE%A4dubbo%E5%8D%8F%E8%AE%AE%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%88%A9%E7%94%A8%E4%B9%8Bhessian2/</a><br><a href="https://www.iswin.org/2016/01/24/Spring-framework-deserialization-RCE-%E5%88%86%E6%9E%90%E4%BB%A5%E5%8F%8A%E5%88%A9%E7%94%A8/" target="_blank" rel="noopener">https://www.iswin.org/2016/01/24/Spring-framework-deserialization-RCE-%E5%88%86%E6%9E%90%E4%BB%A5%E5%8F%8A%E5%88%A9%E7%94%A8/</a><br><a href="https://www.cnblogs.com/Welk1n/p/11066397.html" target="_blank" rel="noopener">https://www.cnblogs.com/Welk1n/p/11066397.html</a><br><a href="https://www.cnblogs.com/tr1ple/p/12335098.html#2PjbRAmK" target="_blank" rel="noopener">https://www.cnblogs.com/tr1ple/p/12335098.html#2PjbRAmK</a><br><a href="http://www.yulegeyu.com/2018/12/04/JNDI-Injection-Via-LDAP-Deserialize/" target="_blank" rel="noopener">http://www.yulegeyu.com/2018/12/04/JNDI-Injection-Via-LDAP-Deserialize/</a><br><a href="https://www.blackhat.com/docs/us-16/materials/us-16-Munoz-A-Journey-From-JNDI-LDAP-Manipulation-To-RCE.pdf" target="_blank" rel="noopener">https://www.blackhat.com/docs/us-16/materials/us-16-Munoz-A-Journey-From-JNDI-LDAP-Manipulation-To-RCE.pdf</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1237,7 +1196,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-count">14</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
