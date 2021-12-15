@@ -145,6 +145,93 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/03/05/Dubbo%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0-%E5%86%8D%E7%BB%AD%E4%B8%80%E4%B8%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0xSky">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="自动笔记生成器">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/03/05/Dubbo%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0-%E5%86%8D%E7%BB%AD%E4%B8%80%E4%B8%8B/" class="post-title-link" itemprop="url">Dubbo漏洞学习-再续一下</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-03-05 14:25:59" itemprop="dateCreated datePublished" datetime="2021-03-05T14:25:59+08:00">2021-03-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-03-08 09:45:30" itemprop="dateModified" datetime="2021-03-08T09:45:30+08:00">2021-03-08</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>再续一kou ·<br>之前的JDNI触发方式需要依赖于其他的gadget，限制诸多，那有没有别的突破方式呢？</p>
+<h4 id="本地工厂类突破JNDI限制"><a href="#本地工厂类突破JNDI限制" class="headerlink" title="本地工厂类突破JNDI限制"></a>本地工厂类突破JNDI限制</h4><p>之前有提到有师傅提到可以使用Java的处理特性， 在加载Reference中指定Factory Class时会先在本地勋在是否存在，不存在才会从远程加载，所以如果恶意类是本地存在的，那就能不受远程加载的限制尝试JNDI注入了。<br>在 <a href="https://www.veracode.com/blog/research/exploiting-jndi-injections-java" target="_blank" rel="noopener">Exploiting JNDI Injections in Java</a>   一文中作者使用了org.apache.naming.factory.BeanFactory与javax.el.ELProcessor两个类。这两个类一般来说在Tomcat8+的依赖或者是SpringBoot 1.2.x+（spring-boot-starter-web依赖）中存在依赖，使用广泛。<br>扒一下作者的RMIServer，改成弹出计算器，因为我使用的官方demo在dubbo-spring-boot-auto-configure-provider-sample中没有spring-boot-starter-web所以我手动添加了</p>
+<p><img src="/images/210305/Image.png" alt=""></p>
+<p>启动RMIServer，发送spring-aop的POC，可以在8_251环境弹出计算器</p>
+<p><img src="/images/210305/Image%20%5B1%5D.png" alt=""></p>
+<p><img src="/images/210305/Image%20%5B2%5D.png" alt=""></p>
+<h4 id="触发链路"><a href="#触发链路" class="headerlink" title="触发链路"></a>触发链路</h4><p>在JNDI lookup的RMI链路中， 可以在返回的Reference中指定Factory Class，如果本地CLASSPATH存在就不需要从远程加载，而这个类必须实现 javax.naming.spi.ObjectFactory 接口，并且至少存在一个 getObjectInstance() 方法，javax.naming.spi.NamingManager中调用这个方法</p>
+<p><img src="/images/210305/Image%20%5B3%5D.png" alt=""></p>
+<p><img src="/images/210305/Image%20%5B4%5D.png" alt=""></p>
+<p><img src="/images/210305/Image%20%5B5%5D.png" alt=""></p>
+<p>BeanFactory类创建任意bean的实例，并为所有属性调用其setter进行赋值。目标bean类名、属性和属性值都来自引用对象，对象由攻击者控制</p>
+<p><img src="/images/210305/Image%20%5B6%5D.png" alt=""></p>
+<p>作者使用javax.el.ELProcessor作为目标类用forceString指定setter方法， x=eval设置eval方法用js引擎执行命令</p>
+<p><img src="/images/210305/Image%20%5B7%5D.png" alt=""></p>
+<p><img src="/images/210305/Image%20%5B8%5D.png" alt=""></p>
+<p><img src="/images/210305/Image%20%5B9%5D.png" alt=""></p>
+<p>最终invoke ELProcessor.eval方法</p>
+<p><img src="/images/210305/Image%20%5B10%5D.png" alt=""></p>
+<p>调用堆栈</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">eval:<span class="number">96</span>, ELProcessor (javax.el)</span><br><span class="line">invoke0:-<span class="number">1</span>, NativeMethodAccessorImpl (sun.reflect)</span><br><span class="line">invoke:<span class="number">62</span>, NativeMethodAccessorImpl (sun.reflect)</span><br><span class="line">invoke:<span class="number">43</span>, DelegatingMethodAccessorImpl (sun.reflect)</span><br><span class="line">invoke:<span class="number">498</span>, Method (java.lang.reflect)</span><br><span class="line">getObjectInstance:<span class="number">211</span>, BeanFactory (org.apache.naming.factory)</span><br><span class="line">getObjectInstance:<span class="number">321</span>, NamingManager (javax.naming.spi)</span><br><span class="line">decodeObject:<span class="number">499</span>, RegistryContext (com.sun.jndi.rmi.registry)</span><br><span class="line">lookup:<span class="number">138</span>, RegistryContext (com.sun.jndi.rmi.registry)</span><br><span class="line">lookup:<span class="number">205</span>, GenericURLContext (com.sun.jndi.toolkit.url)</span><br><span class="line">lookup:<span class="number">417</span>, InitialContext (javax.naming)</span><br><span class="line">lambda$lookup$<span class="number">0</span>:<span class="number">157</span>, JndiTemplate (org.springframework.jndi)</span><br><span class="line">doInContext:-<span class="number">1</span>, <span class="number">1889002304</span> (org.springframework.jndi.JndiTemplate$$Lambda$<span class="number">606</span>)</span><br><span class="line">execute:<span class="number">92</span>, JndiTemplate (org.springframework.jndi)</span><br><span class="line">lookup:<span class="number">157</span>, JndiTemplate (org.springframework.jndi)</span><br><span class="line">lookup:<span class="number">179</span>, JndiTemplate (org.springframework.jndi)</span><br><span class="line">lookup:<span class="number">96</span>, JndiLocatorSupport (org.springframework.jndi)</span><br><span class="line">doGetSingleton:<span class="number">271</span>, SimpleJndiBeanFactory (org.springframework.jndi.support)</span><br><span class="line">getBean:<span class="number">116</span>, SimpleJndiBeanFactory (org.springframework.jndi.support)</span><br><span class="line">getAdvice:<span class="number">116</span>, AbstractBeanFactoryPointcutAdvisor (org.springframework.aop.support)</span><br><span class="line">equals:<span class="number">76</span>, AbstractPointcutAdvisor (org.springframework.aop.support)</span><br><span class="line">putVal:<span class="number">635</span>, HashMap (java.util)</span><br><span class="line">put:<span class="number">612</span>, HashMap (java.util)</span><br><span class="line">doReadMap:<span class="number">145</span>, MapDeserializer (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readMap:<span class="number">126</span>, MapDeserializer (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readObject:<span class="number">2703</span>, Hessian2Input (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readObject:<span class="number">2278</span>, Hessian2Input (com.alibaba.com.caucho.hessian.io)</span><br><span class="line">readObject:<span class="number">85</span>, Hessian2ObjectInput (org.apache.dubbo.common.serialize.hessian2)</span><br><span class="line">readEvent:<span class="number">83</span>, ObjectInput (org.apache.dubbo.common.serialize)</span><br><span class="line">decodeEventData:<span class="number">400</span>, ExchangeCodec (org.apache.dubbo.remoting.exchange.codec)</span><br><span class="line">decodeBody:<span class="number">121</span>, DubboCodec (org.apache.dubbo.rpc.protocol.dubbo)</span><br><span class="line">decode:<span class="number">122</span>, ExchangeCodec (org.apache.dubbo.remoting.exchange.codec)</span><br><span class="line">decode:<span class="number">82</span>, ExchangeCodec (org.apache.dubbo.remoting.exchange.codec)</span><br><span class="line">decode:<span class="number">48</span>, DubboCountCodec (org.apache.dubbo.rpc.protocol.dubbo)</span><br><span class="line">decode:<span class="number">85</span>, NettyCodecAdapter$InternalDecoder (org.apache.dubbo.remoting.transport.netty4)</span><br><span class="line">decodeRemovalReentryProtection:<span class="number">508</span>, ByteToMessageDecoder (io.netty.handler.codec)</span><br><span class="line">callDecode:<span class="number">447</span>, ByteToMessageDecoder (io.netty.handler.codec)</span><br><span class="line">channelRead:<span class="number">276</span>, ByteToMessageDecoder (io.netty.handler.codec)</span><br><span class="line">invokeChannelRead:<span class="number">379</span>, AbstractChannelHandlerContext (io.netty.channel)</span><br><span class="line">invokeChannelRead:<span class="number">365</span>, AbstractChannelHandlerContext (io.netty.channel)</span><br><span class="line">fireChannelRead:<span class="number">357</span>, AbstractChannelHandlerContext (io.netty.channel)</span><br><span class="line">channelRead:<span class="number">1410</span>, DefaultChannelPipeline$HeadContext (io.netty.channel)</span><br><span class="line">invokeChannelRead:<span class="number">379</span>, AbstractChannelHandlerContext (io.netty.channel)</span><br><span class="line">invokeChannelRead:<span class="number">365</span>, AbstractChannelHandlerContext (io.netty.channel)</span><br><span class="line">fireChannelRead:<span class="number">919</span>, DefaultChannelPipeline (io.netty.channel)</span><br><span class="line">read:<span class="number">166</span>, AbstractNioByteChannel$NioByteUnsafe (io.netty.channel.nio)</span><br><span class="line">processSelectedKey:<span class="number">719</span>, NioEventLoop (io.netty.channel.nio)</span><br><span class="line">processSelectedKeysOptimized:<span class="number">655</span>, NioEventLoop (io.netty.channel.nio)</span><br><span class="line">processSelectedKeys:<span class="number">581</span>, NioEventLoop (io.netty.channel.nio)</span><br><span class="line">run:<span class="number">493</span>, NioEventLoop (io.netty.channel.nio)</span><br><span class="line">run:<span class="number">989</span>, SingleThreadEventExecutor$<span class="number">4</span> (io.netty.util.concurrent)</span><br><span class="line">run:<span class="number">74</span>, ThreadExecutorMap$<span class="number">2</span> (io.netty.util.internal)</span><br><span class="line">run:<span class="number">30</span>, FastThreadLocalRunnable (io.netty.util.concurrent)</span><br><span class="line">run:<span class="number">748</span>, Thread (java.lang)</span><br></pre></td></tr></table></figure>
+
+<p>至此对于dubbo反序列化（CVE-2020-1948）的完整利用链路学习结束。</p>
+<p>参考链接：<br><a href="https://kingx.me/Restrictions-and-Bypass-of-JNDI-Manipulations-RCE.html" target="_blank" rel="noopener">https://kingx.me/Restrictions-and-Bypass-of-JNDI-Manipulations-RCE.html</a><br><a href="https://www.cnblogs.com/Welk1n/p/11066397.html" target="_blank" rel="noopener">https://www.cnblogs.com/Welk1n/p/11066397.html</a><br><a href="https://www.cnblogs.com/tr1ple/p/12335098.html#adCcMrff" target="_blank" rel="noopener">https://www.cnblogs.com/tr1ple/p/12335098.html#adCcMrff</a><br><a href="http://rui0.cn/archives/1338" target="_blank" rel="noopener">http://rui0.cn/archives/1338</a><br><a href="https://www.veracode.com/blog/research/exploiting-jndi-injections-java" target="_blank" rel="noopener">https://www.veracode.com/blog/research/exploiting-jndi-injections-java</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/03/03/dubbo%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0-%E7%BB%AD/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -705,7 +792,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-count">15</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
