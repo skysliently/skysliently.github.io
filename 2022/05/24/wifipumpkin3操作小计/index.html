@@ -20,15 +20,26 @@
     var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="自动笔记生成器">
-<meta property="og:url" content="http://yoursite.com/archives/2021/12/index.html">
+  <meta name="description" content="使用 wifipumpkin3 进行一些wifi钓鱼预演实验首先，因为无线网卡不直接支持Linux，所以根据型号找了个GitHub驱动进行安装   https:&#x2F;&#x2F;github.com&#x2F;McMCCRU&#x2F;rtl8188gu期间报了几个错误，主要是因为kali中的依赖不完整，补全后安装完成此时再使用ifconfig&#x2F;iwconfig就可以看到网卡被识别了  根据无线南瓜3的文档进行安装操作https:">
+<meta property="og:type" content="article">
+<meta property="og:title" content="wifipumpkin3操作小计">
+<meta property="og:url" content="http://yoursite.com/2022/05/24/wifipumpkin3%E6%93%8D%E4%BD%9C%E5%B0%8F%E8%AE%A1/index.html">
 <meta property="og:site_name" content="自动笔记生成器">
+<meta property="og:description" content="使用 wifipumpkin3 进行一些wifi钓鱼预演实验首先，因为无线网卡不直接支持Linux，所以根据型号找了个GitHub驱动进行安装   https:&#x2F;&#x2F;github.com&#x2F;McMCCRU&#x2F;rtl8188gu期间报了几个错误，主要是因为kali中的依赖不完整，补全后安装完成此时再使用ifconfig&#x2F;iwconfig就可以看到网卡被识别了  根据无线南瓜3的文档进行安装操作https:">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/images/220524/wifipumpkin3/Image.png">
+<meta property="og:image" content="http://yoursite.com/images/220524/wifipumpkin3/Image%20%5B1%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/220524/wifipumpkin3/Image%20%5B2%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/220524/wifipumpkin3/Image%20%5B3%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/220524/wifipumpkin3/Image%20%5B4%5D.png">
+<meta property="og:image" content="http://yoursite.com/images/220524/wifipumpkin3/Image%20%5B5%5D.png">
+<meta property="article:published_time" content="2022-05-24T09:37:32.000Z">
+<meta property="article:modified_time" content="2022-05-24T09:43:35.904Z">
 <meta property="article:author" content="0xSky">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/images/220524/wifipumpkin3/Image.png">
 
-<link rel="canonical" href="http://yoursite.com/archives/2021/12/">
+<link rel="canonical" href="http://yoursite.com/2022/05/24/wifipumpkin3%E6%93%8D%E4%BD%9C%E5%B0%8F%E8%AE%A1/">
 
 
 <script id="page-configurations">
@@ -36,12 +47,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>归档 | 自动笔记生成器</title>
+  <title>wifipumpkin3操作小计 | 自动笔记生成器</title>
   
 
 
@@ -139,90 +150,100 @@
         <div class="content-wrap">
           
 
-          <div class="content archive">
+          <div class="content post posts-expand">
             
 
+    
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <span class="collection-header">嗯..! 目前共计 18 篇日志。 继续努力。</span>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/05/24/wifipumpkin3%E6%93%8D%E4%BD%9C%E5%B0%8F%E8%AE%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0xSky">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="自动笔记生成器">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          wifipumpkin3操作小计
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-05-24 17:37:32 / 修改时间：17:43:35" itemprop="dateCreated datePublished" datetime="2022-05-24T17:37:32+08:00">2022-05-24</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <span class="collection-header">2021</span>
-    </div>
+        <p>使用 wifipumpkin3 进行一些wifi钓鱼预演实验<br>首先，因为无线网卡不直接支持Linux，所以根据型号找了个GitHub驱动进行安装</p>
+<p><img src="/images/220524/wifipumpkin3/Image.png" alt=""></p>
+<p><img src="/images/220524/wifipumpkin3/Image%20%5B1%5D.png" alt=""></p>
+<p><a href="https://github.com/McMCCRU/rtl8188gu" target="_blank" rel="noopener">https://github.com/McMCCRU/rtl8188gu</a><br>期间报了几个错误，主要是因为kali中的依赖不完整，补全后安装完成<br>此时再使用ifconfig/iwconfig就可以看到网卡被识别了</p>
+<p><img src="/images/220524/wifipumpkin3/Image%20%5B2%5D.png" alt=""></p>
+<p>根据无线南瓜3的文档进行安装操作<a href="https://wifipumpkin3.github.io/docs/getting-started#usage" target="_blank" rel="noopener">https://wifipumpkin3.github.io/docs/getting-started#usage</a></p>
+<p>由于在kali中进行，所以根据kali分类进行操作安装</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ sudo apt install libssl-dev libffi-dev build-essential</span><br><span class="line">$ git <span class="built_in">clone</span> https://github.com/P0cL4bs/wifipumpkin3.git</span><br><span class="line">$ <span class="built_in">cd</span> wifipumpkin3</span><br></pre></td></tr></table></figure>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+<p>安装 PyQt5</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo apt install python3-pyqt5</span></span><br></pre></td></tr></table></figure>
 
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2021-12-15T16:11:04+08:00"
-              content="2021-12-15">
-          12-15
-        </time>
-      </div>
+<p>依赖安装完成后安装无线南瓜3</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> sudo python3 setup.py install</span></span><br></pre></td></tr></table></figure>
 
-      <div class="post-title">
-          <a class="post-title-link" href="/2021/12/15/log4j2%E6%BC%8F%E6%B4%9E%E7%AE%80%E5%8D%95%E5%B0%8F%E8%AE%A1-ZCY%E6%8A%95%E7%A8%BF%E7%89%88/" itemprop="url">
-            <span itemprop="name">log4j2漏洞简单小计_ZCY投稿版</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2021-12-10T18:39:46+08:00"
-              content="2021-12-10">
-          12-10
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2021/12/10/log4j2%E6%BC%8F%E6%B4%9E%E7%AE%80%E5%8D%95%E5%B0%8F%E8%AE%A1/" itemprop="url">
-            <span itemprop="name">log4j2漏洞简单小计</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2021-12-03T16:51:07+08:00"
-              content="2021-12-03">
-          12-03
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2021/12/03/sonar%E8%87%AA%E5%AE%9A%E4%B9%89%E8%A7%84%E5%88%99%E5%85%A5%E9%97%A8%E9%9A%8F%E8%AE%B0-XML/" itemprop="url">
-            <span itemprop="name">sonar自定义规则入门随记-XML</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
+<p>安装完成后控制台输入wifipumpkin3即可启动</p>
+<p><img src="/images/220524/wifipumpkin3/Image%20%5B3%5D.png" alt=""></p>
+<p>简单设置即可启动一个简单的钓鱼wifi监听</p>
+<p><img src="/images/220524/wifipumpkin3/Image%20%5B4%5D.png" alt=""></p>
+<p>客户端连接后即可查看日志信息</p>
+<p><img src="/images/220524/wifipumpkin3/Image%20%5B5%5D.png" alt=""></p>
 
     </div>
-  </div>
-  
-  
-  
 
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/05/24/mysql%E6%97%A5%E6%9C%9F%E6%9F%A5%E8%AF%A2%E8%B8%A9%E5%9D%91/" rel="prev" title="mysql日期查询踩坑">
+      <i class="fa fa-chevron-left"></i> mysql日期查询踩坑
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/05/24/sonar-XML%E8%A7%84%E5%88%99%E5%AE%9E%E7%8E%B0%E5%B0%8F%E8%AE%A1/" rel="next" title="sonar XML规则实现小计">
+      sonar XML规则实现小计 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
   
 
 
