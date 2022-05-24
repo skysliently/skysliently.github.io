@@ -145,6 +145,75 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/05/24/bouncycastle%E5%8C%85%E5%AE%9E%E7%8E%B0SM2%E5%AD%A6%E4%B9%A0%E7%AE%80%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0xSky">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="自动笔记生成器">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/05/24/bouncycastle%E5%8C%85%E5%AE%9E%E7%8E%B0SM2%E5%AD%A6%E4%B9%A0%E7%AE%80%E8%AE%B0/" class="post-title-link" itemprop="url">bouncycastle包实现SM2学习简记</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-05-24 19:29:11 / 修改时间：19:33:10" itemprop="dateCreated datePublished" datetime="2022-05-24T19:29:11+08:00">2022-05-24</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>近期有实现SM2加密验签的需要，一般不直接使用非对称加密直接对数据进行加密，效率不高，所以验签、签名是SM2的重要用途。<br>实验环境：jdk8，bouncycastle 1.59 -&gt;1.62（升级）<br>起先使用bouncycastle 1.59进行测试，在网上找了三个方案，其中有两个方案自己实现了SM2椭圆曲线，但是在阅读了文档并查看了bouncycastle源码后发现其实bouncycastle已经实现了SM2曲线，加解密，加签验签也都能直接使用</p>
+<p><img src="/images/220524/bouncycastle_sm2/Image.png" alt=""></p>
+<p>椭圆曲线已经实现</p>
+<p><img src="/images/220524/bouncycastle_sm2/Image%20%5B1%5D.png" alt=""></p>
+<p>引擎也已实现，默认C1C3C2模式，需要自行兼容</p>
+<p>所以后续我只做了两件事：<br>1.调用bouncycastle实现加解密、加验签<br>2.进行兼容处理，处理头部03、04标记字节、处理C1C3C2密文排练（默认是C1C2C3）、兼容加签验签<br>加解密调用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">byte</span>[] encrypt(<span class="keyword">byte</span>[] in, BCECPublicKey publicKey, <span class="keyword">int</span> modeType) &#123;</span><br><span class="line">        <span class="comment">//加密模式</span></span><br><span class="line">        SM2Engine.Mode mode;</span><br><span class="line">        <span class="keyword">if</span> (modeType == <span class="number">1</span>) &#123;</span><br><span class="line">            mode = SM2Engine.Mode.C1C3C2;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            mode = SM2Engine.Mode.C1C2C3;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//通过公钥对象获取公钥的基本域参数。</span></span><br><span class="line">        ECParameterSpec ecParameterSpec = publicKey.getParameters();</span><br><span class="line">        ECDomainParameters ecDomainParameters = <span class="keyword">new</span> ECDomainParameters(ecParameterSpec.getCurve(),ecParameterSpec.getG(), ecParameterSpec.getN());</span><br><span class="line">        <span class="comment">//通过公钥值和公钥基本参数创建公钥参数对象</span></span><br><span class="line">        ECPublicKeyParameters ecPublicKeyParameters = <span class="keyword">new</span> ECPublicKeyParameters(publicKey.getQ(), ecDomainParameters);</span><br><span class="line">        <span class="comment">//根据加密模式实例化SM2公钥加密引擎</span></span><br><span class="line">        SM2Engine sm2Engine = <span class="keyword">new</span> SM2Engine(mode);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">//初始化加密引擎</span></span><br><span class="line">            sm2Engine.init(<span class="keyword">true</span>, <span class="keyword">new</span> ParametersWithRandom(ecPublicKeyParameters, <span class="keyword">new</span> SecureRandom()));</span><br><span class="line">            <span class="keyword">byte</span>[] out = sm2Engine.processBlock(in,<span class="number">0</span>,in.length);</span><br><span class="line">            <span class="comment">// 兼容非bouncycastle库实现，头部没有标记</span></span><br><span class="line">            <span class="keyword">return</span> Arrays.copyOfRange(out,<span class="number">1</span>,out.length);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InvalidCipherTextException e) &#123;</span><br><span class="line"><span class="comment">//            throw、LOG</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (IllegalArgumentException e) &#123;</span><br><span class="line"><span class="comment">//            throw、LOG</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">byte</span>[] decrypt(<span class="keyword">byte</span>[] in, BCECPrivateKey privateKey,<span class="keyword">int</span> modeType) &#123;</span><br><span class="line">        <span class="comment">//解密模式</span></span><br><span class="line">        SM2Engine.Mode mode;</span><br><span class="line">        <span class="keyword">if</span> (modeType == <span class="number">1</span>) &#123;</span><br><span class="line">            mode = SM2Engine.Mode.C1C3C2;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            mode = SM2Engine.Mode.C1C2C3;</span><br><span class="line">        &#125;</span><br><span class="line"><span class="comment">//        兼容非BouncyCastle生成的密文，头部无04标记字节</span></span><br><span class="line">        <span class="keyword">if</span> (in[<span class="number">0</span>] != (<span class="keyword">byte</span>) <span class="number">0x04</span>) &#123;</span><br><span class="line">            in = insertElement(in,(<span class="keyword">byte</span>) <span class="number">0x04</span>,<span class="number">0</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//通过私钥对象获取私钥的基本域参数。</span></span><br><span class="line">        ECParameterSpec ecParameterSpec = privateKey.getParameters();</span><br><span class="line">        ECDomainParameters ecDomainParameters = <span class="keyword">new</span> ECDomainParameters(ecParameterSpec.getCurve(),ecParameterSpec.getG(), ecParameterSpec.getN());</span><br><span class="line">        <span class="comment">//通过私钥值和私钥钥基本参数创建私钥参数对象</span></span><br><span class="line">        ECPrivateKeyParameters ecPrivateKeyParameters = <span class="keyword">new</span> ECPrivateKeyParameters(privateKey.getD(),ecDomainParameters);</span><br><span class="line">        <span class="comment">//通过解密模式创建解密引擎并初始化</span></span><br><span class="line">        SM2Engine sm2Engine = <span class="keyword">new</span> SM2Engine(mode);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            sm2Engine.init(<span class="keyword">false</span>, ecPrivateKeyParameters);</span><br><span class="line">            <span class="keyword">return</span> sm2Engine.processBlock(in,<span class="number">0</span>,in.length);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InvalidCipherTextException  e) &#123;</span><br><span class="line"><span class="comment">//            thorw、LOG</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (IllegalArgumentException e) &#123;</span><br><span class="line"><span class="comment">//            thorw、LOG</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>加签验签的逻辑这里就不放， 直接调用即可，与外部对接则需要做兼容处理。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/05/24/sonar-XML%E8%A7%84%E5%88%99%E5%AE%9E%E7%8E%B0%E5%B0%8F%E8%AE%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -170,7 +239,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-05-24 17:48:39 / 修改时间：17:55:47" itemprop="dateCreated datePublished" datetime="2022-05-24T17:48:39+08:00">2022-05-24</time>
+              <time title="创建时间：2022-05-24 17:48:39 / 修改时间：17:56:53" itemprop="dateCreated datePublished" datetime="2022-05-24T17:48:39+08:00">2022-05-24</time>
             </span>
 
           
@@ -189,7 +258,7 @@
 <p>但是，这并不意味着我们无法再编写XML的规则了，只是不能想编写针对Java的规则那样方便地增加规则了。<br>首先，官方任然支持插件，而XML规则本身也是插件，所以可以依葫芦画瓢照搬一个XML插件。这里我没有直接在官方插件上添加规则，虽然理论上这是最快的途径，但是修改官方的内置插件很麻烦也会给升级带来很大的问题，所以添加新插件是最优解。<br>首先访问官方插件示例和官方XML插件源代码：<br><a href="https://github.com/SonarSource/sonar-custom-plugin-example" target="_blank" rel="noopener">https://github.com/SonarSource/sonar-custom-plugin-example</a><br><a href="https://github.com/SonarSource/sonar-xml/tree/2.5.0.3376" target="_blank" rel="noopener">https://github.com/SonarSource/sonar-xml/tree/2.5.0.3376</a><br>有了Java插件的底子，我们知道插件是通过官方的Plugin接口定义的，所以先看官方示例</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ExamplePlugin</span> <span class="keyword">implements</span> <span class="title">Plugin</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">define</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// tutorial on hooks</span></span><br><span class="line">    <span class="comment">// http://docs.sonarqube.org/display/DEV/Adding+Hooks</span></span><br><span class="line">    context.addExtensions(PostJobInScanner<span class="class">.<span class="keyword">class</span>, <span class="title">DisplayQualityGateStatus</span>.<span class="title">class</span>)</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// tutorial on languages</span></span><br><span class="line">    context.addExtensions(FooLanguage<span class="class">.<span class="keyword">class</span>, <span class="title">FooQualityProfile</span>.<span class="title">class</span>)</span>;</span><br><span class="line">    context.addExtensions(FooLanguageProperties.getProperties());</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// tutorial on measures</span></span><br><span class="line">    context</span><br><span class="line">      .addExtensions(ExampleMetrics<span class="class">.<span class="keyword">class</span>, <span class="title">SetSizeOnFilesSensor</span>.<span class="title">class</span>, <span class="title">ComputeSizeAverage</span>.<span class="title">class</span>, <span class="title">ComputeSizeRating</span>.<span class="title">class</span>)</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// tutorial on rules</span></span><br><span class="line">    context.addExtensions(JavaRulesDefinition<span class="class">.<span class="keyword">class</span>, <span class="title">CreateIssuesOnJavaFilesSensor</span>.<span class="title">class</span>)</span>;</span><br><span class="line">    context.addExtensions(FooLintRulesDefinition<span class="class">.<span class="keyword">class</span>, <span class="title">FooLintIssuesLoaderSensor</span>.<span class="title">class</span>)</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// tutorial on settings</span></span><br><span class="line">    context</span><br><span class="line">      .addExtensions(HelloWorldProperties.getProperties())</span><br><span class="line">      .addExtension(SayHelloFromScanner<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// tutorial on web extensions</span></span><br><span class="line">    context.addExtension(MyPluginPageDefinition<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>可以看到官方插件中有6个部分，首先Web部分我们直接忽略，用不着。剩下五个部分分别是hooks、languages、measures、rules、settings首先setting是指Properties，包括内部配置定义，例如sonar Quality Profiles 中的默认配置，也是可以不添加的。<br>其次是languages，是指对语言的定义，这里我们要扫描的是XML，因为官方插件中已经定义了我们可以不定义，稍后再说。<br>然后hooks用于添加issue等操作，在官方插件没有发现这个定义，暂时略过。<br>接下来就是measures和rules，measures个人认为是用于对文件进行处理的扫描，官方插件中有一个measure是Sensor接口定义，暂略。<br>rules是我们具体的规则和定义类。</p>
+<p>可以看到官方插件中有6个部分，首先Web部分我们直接忽略，用不着。<br>剩下五个部分分别是hooks、languages、measures、rules、settings首先setting是指Properties，包括内部配置定义，例如sonar Quality Profiles 中的默认配置，也是可以不添加的。<br>其次是languages，是指对语言的定义，这里我们要扫描的是XML，因为官方插件中已经定义了我们可以不定义，稍后再说。<br>然后hooks用于添加issue等操作，在官方插件没有发现这个定义，暂时略过。<br>接下来就是measures和rules，measures个人认为是用于对文件进行处理的扫描，官方插件中有一个measure是Sensor接口定义，暂略。<br>rules是我们具体的规则和定义类。</p>
 <p>接下来我们通过官方XML插件进行比较：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.sonar.plugins.xml;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.sonar.api.Plugin;</span><br><span class="line"><span class="keyword">import</span> org.sonar.api.config.PropertyDefinition;</span><br><span class="line"><span class="keyword">import</span> org.sonar.api.resources.Qualifiers;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">XmlPlugin</span> <span class="keyword">implements</span> <span class="title">Plugin</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String FILE_SUFFIXES_KEY = <span class="string">"sonar.xml.file.suffixes"</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">define</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">    context.addExtensions(</span><br><span class="line">      PropertyDefinition.builder(XmlPlugin.FILE_SUFFIXES_KEY)</span><br><span class="line">        .name(<span class="string">"File suffixes"</span>)</span><br><span class="line">        .description(<span class="string">"List of suffixes for XML files to analyze."</span>)</span><br><span class="line">        .defaultValue(<span class="string">".xml,.xsd,.xsl"</span>)</span><br><span class="line">        .multiValues(<span class="keyword">true</span>)</span><br><span class="line">        .category(<span class="string">"XML"</span>)</span><br><span class="line">        .onQualifiers(Qualifiers.PROJECT)</span><br><span class="line">        .build(),</span><br><span class="line">      Xml<span class="class">.<span class="keyword">class</span>,</span></span><br><span class="line"><span class="class">      <span class="title">XmlRulesDefinition</span>.<span class="title">class</span>,</span></span><br><span class="line"><span class="class">      <span class="title">XmlSonarWayProfile</span>.<span class="title">class</span>,</span></span><br><span class="line"><span class="class">      <span class="title">XmlSensor</span>.<span class="title">class</span>)</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -956,74 +1025,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/09/18/%E8%BF%9C%E7%A8%8B%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8C%97/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="0xSky">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="自动笔记生成器">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/09/18/%E8%BF%9C%E7%A8%8B%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8C%97/" class="post-title-link" itemprop="url">远程文件操作指北</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2021-09-18 15:48:59 / 修改时间：15:57:24" itemprop="dateCreated datePublished" datetime="2021-09-18T15:48:59+08:00">2021-09-18</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>遇到了需要跨堡垒机进行文件传输的情况，很多人推荐使用securecrt，securecrt十分强大，但是奈何囊中羞涩，于是乎使用其他工具进行，这里使用zssh进行。</p>
-<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>使用brew install zssh安装，遇到了个403问题，临时更换了清华源后解决，Linux可以用apt-get安装。</p>
-<p><img src="/images/210918/Image%20.png" alt=""></p>
-<h3 id="登录"><a href="#登录" class="headerlink" title="登录"></a>登录</h3><p>只是简单地从ssh登录改为zssh登录就可以了，没有什么区别，直接zssh user@server登录即可。我这里登录后再从堡垒机连接到对应的服务器。</p>
-<h3 id="传输"><a href="#传输" class="headerlink" title="传输"></a>传输</h3><h3 id="上传"><a href="#上传" class="headerlink" title="上传"></a>上传</h3><p>在需要传输的文件下使用快捷键调出zssh（我这里是control+@，可能有所不同），使用sz命令进行文件上传。</p>
-<p><img src="/images/210918/Image%20%5B1%5D.png" alt=""></p>
-<h3 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h3><p>sz 上传文件，然后呼出zssh，再使用rz接收就行了，可能会失败。使用 rz -bye成功率较高，-b是字节传输，-e是检查编码对所有控制字符转译，-y暂时不清楚。</p>
-<p><img src="/images/210918/Image%20%5B2%5D.png" alt=""></p>
-<p><img src="/images/210918/Image%20%5B3%5D.png" alt=""></p>
-<h3 id="呱"><a href="#呱" class="headerlink" title="呱"></a>呱</h3><p>zssh就是使用了sz，rz进行传输但是不需要进行配置，在便捷性上更上一层。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1093,7 +1094,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">18</span>
+          <span class="site-state-item-count">19</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
